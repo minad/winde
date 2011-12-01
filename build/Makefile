@@ -1,4 +1,4 @@
-PROJECT=radio
+PROJECT=winde
 MCU = atmega64
 TARGET = $(PROJECT).elf
 CC = avr-gcc
@@ -12,14 +12,14 @@ CFLAGS = $(COMMON)
 CFLAGS += -Wall -gdwarf-2 -std=gnu99 -DF_CPU=14745600UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d
 
-INCLUDES=-I.. -I../.. -I../../../libs/can-lib
+INCLUDES=-I..
 
 ## Assembly specific flags
 ASMFLAGS = $(COMMON)
 ASMFLAGS += $(CFLAGS)
 ASMFLAGS += -x assembler-with-cpp -Wa,-gdwarf2
 
-LIBS = -lcan -Wl,-u,vfprintf -lprintf_flt
+LIBS = -Wl,-u,vfprintf -lprintf_flt
 LIBDIRS = -L..
 
 ## Linker flags

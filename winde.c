@@ -26,7 +26,7 @@
 #define _RESET(x,y)          _PORT(x,y) &= ~(1 << y)
 #define _SET(x,y)            _PORT(x,y) |= (1 << y)
 #define _TOGGLE(x,y)         _PORT(x,y) ^= (1 << y)
-#define _SET_OUTPUT(x,y      _DDR(x,y) |= (1 << y)
+#define _SET_OUTPUT(x,y)     _DDR(x,y) |= (1 << y)
 #define _SET_INPUT(x,y)      _DDR(x,y) &= ~(1 << y)
 #define _IS_SET(x,y)         ((_PIN(x,y) & (1 << y)) != 0)
 
@@ -44,7 +44,7 @@ typedef struct {
 
 void system_init();
 
-void cmd_exec(const char*);
+void cmd_exec(char*);
 
 ringbuf_t* ringbuf_init(void* buf, size_t size);
 void ringbuf_reset(ringbuf_t* rb);
@@ -52,9 +52,9 @@ int ringbuf_putc(ringbuf_t* rb, char c);
 int ringbuf_getc(ringbuf_t* rb);
 
 void   uart_init(uint32_t bps);
-int    uart_getchar(FILE* fp);
+int    uart_putchar(char c, FILE* fp);
 size_t uart_gets(char* s, size_t size);
-
+ 
 void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
@@ -84,7 +84,7 @@ void system_init() {
         sei();
 }
 
-void cmd_help() {
+void cmd_help(int argc, char* argv[]) {
         printf("List of available commands:\n");
         for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
                 printf("%s\n", cmd->name);
@@ -97,7 +97,7 @@ void cmd_version(int argc, char* argv[]) {
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
 }
 
-void cmd_exec(const char* line) {
+void cmd_exec(char* line) {
         const int MAX_ARGS = 10;
         char *argv[MAX_ARGS];
         int argc;
@@ -149,13 +149,13 @@ void uart_init(uint32_t bps) {
         uint32_t baud = F_CPU / (bps * 16) - 1;
 
         // Set baud rate
-        UBRRH = baud >> 8;
-        UBRRL = baud & 0xFF;
+        UBRR0H = baud >> 8;
+        UBRR0L = baud & 0xFF;
 
         // set frame format: 8 bit, no parity, 1 stop bit
-        UCSRC = (1 << URSEL) | (1 << UCSZ1) | (1 << UCSZ0);
+        UCSR0C = (1 << UMSEL) | (1 << UCSZ1) | (1 << UCSZ0);
         // enable serial receiver and transmitter
-        UCSRB = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
+        UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
 
         uart_ringbuf = ringbuf_init(uart_buf, sizeof (uart_buf));
 
@@ -165,8 +165,8 @@ void uart_init(uint32_t bps) {
 
 int uart_putchar(char c, FILE* fp) {
         // wait until transmit buffer is empty
-        loop_until_bit_is_set(UCSRA, UDRE);
-        UDR = c;
+        loop_until_bit_is_set(UCSR0A, UDRE);
+        UDR0 = c;
         return 0;
 }
 
@@ -182,6 +182,6 @@ size_t uart_gets(char* s, size_t size) {
         return p - s;
 }
 
-ISR(USART_RXC_vect) {
-        ringbuf_putc(uart_ringbuf, UDR);
+ISR(USART0_RX_vect) {
+        ringbuf_putc(uart_ringbuf, UDR0);
 }
