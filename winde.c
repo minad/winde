@@ -6,6 +6,8 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#define VERSION "0"
+
 // Set/get output/input pins
 #define PORT(x)              _PORT(x)
 #define DDR(x)               _DDR(x)
@@ -54,7 +56,8 @@ int ringbuf_getc(ringbuf_t* rb);
 void   uart_init(uint32_t bps);
 int    uart_putchar(char c, FILE* fp);
 size_t uart_gets(char* s, size_t size);
- 
+
+void cmd_handler();
 void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
@@ -71,10 +74,10 @@ cmd_t cmd_list[] = {
 
 int main() {
         system_init();
+        printf("Steuersoftware Winde\n");
+        printf("> ");
         for (;;) {
-                char line[64];
-                if (uart_gets(line, sizeof (line)) > 0)
-                        cmd_exec(line);
+                cmd_handler();
         }
         return 0;
 }
@@ -82,6 +85,14 @@ int main() {
 void system_init() {
         uart_init(9600);
         sei();
+}
+
+void cmd_handler() {
+        char line[64];
+        if (uart_gets(line, sizeof (line)) > 0) {
+                cmd_exec(line);
+                printf("> ");
+        }
 }
 
 void cmd_help(int argc, char* argv[]) {
@@ -92,7 +103,7 @@ void cmd_help(int argc, char* argv[]) {
 }
 
 void cmd_version(int argc, char* argv[]) {
-        printf("Steuersoftware Winde Version 0\n"
+        printf("Steuersoftware Winde Version " VERSION "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
 }
