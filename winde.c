@@ -8,9 +8,11 @@
 
 #define VERSION "0"
 
-// Set/get output/input pins
+// Output port
 #define PORT(x)              _PORT(x)
+// Data direction register
 #define DDR(x)               _DDR(x)
+// Input port
 #define PIN(x)               _PIN(x)
 #define BIT(x)               _BIT(x)
 #define RESET(x)             _RESET(x)
@@ -31,6 +33,11 @@
 #define _SET_OUTPUT(x,y)     _DDR(x,y) |= (1 << y)
 #define _SET_INPUT(x,y)      _DDR(x,y) &= ~(1 << y)
 #define _IS_SET(x,y)         ((_PIN(x,y) & (1 << y)) != 0)
+
+#define IN_PARKBREMSE            A,0
+#define IN_KAPPVORRICHTUNG_LINKS A,0
+#define OUT_EINKUPPELN_LINKS     A,0
+// ...
 
 typedef struct {
 	char *read;
