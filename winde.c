@@ -114,7 +114,9 @@ cmd_t cmd_list[] = {
 
 int main() {
         system_init();
-        printf("Steuersoftware Winde\n");
+        printf("\n--------------------\n"
+               "Steuersoftware Winde"
+               "\n--------------------\n");
         printf("> ");
         for (;;) {
                 cmd_handler();
@@ -149,11 +151,14 @@ void system_init() {
 }
 
 void cmd_handler() {
-        char line[64];
-        if (uart_gets(line, sizeof (line)) > 0) {
-                cmd_exec(line);
-                printf("> ");
-        }
+        /* char line[64]; */
+        /* if (uart_gets(line, sizeof (line)) > 0) { */
+        /*         cmd_exec(line); */
+        /*         printf("> "); */
+        /* } */
+        int c = ringbuf_getc(uart_ringbuf);
+        if (c != EOF)
+                printf("READ %c\n", c);
 }
 
 void cmd_help(int argc, char* argv[]) {
@@ -225,17 +230,18 @@ void uart_init(uint32_t bps) {
         UBRR0L = baud & 0xFF;
 
         // set frame format: 8 bit, no parity, 1 stop bit
-        UCSR0C = (1 << UMSEL) | (1 << UCSZ1) | (1 << UCSZ0);
+        UCSR0C = (1 << UCSZ1) | (1 << UCSZ0);
         // enable serial receiver and transmitter
-        UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
+        UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE) | (1 << TXCIE);
 
         uart_ringbuf = ringbuf_init(uart_buf, sizeof (uart_buf));
 
         stdout = &uart_stdout;
-
 }
 
 int uart_putchar(char c, FILE* fp) {
+        if (c == '\n')
+                uart_putchar('\r', fp);
         // wait until transmit buffer is empty
         loop_until_bit_is_set(UCSR0A, UDRE);
         UDR0 = c;
@@ -255,5 +261,16 @@ size_t uart_gets(char* s, size_t size) {
 }
 
 ISR(USART0_RX_vect) {
-        ringbuf_putc(uart_ringbuf, UDR0);
+        int c = UDR0;
+        //ringbuf_putc(uart_ringbuf, c);
+        //printf("WRITE %c\n", c);
+        //uart_putchar(c, 0);
+        TOGGLE(OUT_BUZZER);
+}
+
+ISR(USART0_TX_vect) {
+        //ringbuf_putc(uart_ringbuf, c);
+        //printf("WRITE %c\n", c);
+        //uart_putchar(c, 0);
+        //TOGGLE(OUT_BUZZER);
 }
