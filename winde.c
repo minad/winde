@@ -73,8 +73,8 @@
 #define IN_SYSTEM9          B,7 // Öffner
 
 typedef struct {
-	char *read;
-	char *write;
+	size_t read;
+        size_t write;
 	size_t size;
 	char buf[0];
 } ringbuf_t;
@@ -90,6 +90,8 @@ void cmd_exec(char*);
 
 ringbuf_t* ringbuf_init(void* buf, size_t size);
 void ringbuf_reset(ringbuf_t* rb);
+int ringbuf_full(ringbuf_t* rb);
+int ringbuf_empty(ringbuf_t* rb);
 int ringbuf_putc(ringbuf_t* rb, char c);
 int ringbuf_getc(ringbuf_t* rb);
 
@@ -102,7 +104,7 @@ void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
 ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
-char       uart_rx_buf[512], uart_tx_buf[512];
+char       uart_rx_buf[256], uart_tx_buf[256];
 
 FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
 
@@ -119,7 +121,9 @@ int main() {
                "\n--------------------\n");
         printf("> ");
         for (;;) {
-                cmd_handler();
+                loop_until_bit_is_set(UCSR0A, RXC);
+                printf("READ %c\n", UDR0);
+                //cmd_handler();
         }
         return 0;
 }
@@ -151,11 +155,11 @@ void system_init() {
 }
 
 void cmd_handler() {
-        /* char line[64]; */
-        /* if (uart_gets(line, sizeof (line)) > 0) { */
-        /*         cmd_exec(line); */
-        /*         printf("> "); */
-        /* } */
+        char line[64];
+        if (uart_gets(line, sizeof (line)) > 0) {
+                cmd_exec(line);
+                printf("> ");
+        }
 }
 
 void cmd_help(int argc, char* argv[]) {
@@ -197,24 +201,32 @@ ringbuf_t* ringbuf_init(void* buf, size_t size) {
 }
 
 void ringbuf_reset(ringbuf_t* rb) {
-	rb->read = rb->write = rb->buf;
+	rb->read = rb->write = 0;
         memset(rb->buf, 0, rb->size);
 }
 
+int ringbuf_full(ringbuf_t* rb) {
+        return (rb->read == (rb->write + 1) % rb->size);
+}
+
+int ringbuf_empty(ringbuf_t* rb) {
+        return (rb->read == rb->write);
+}
+
 int ringbuf_putc(ringbuf_t* rb, char c) {
-        if (rb->read == rb->write + 1)
+        if (ringbuf_full(rb))
                 return EOF;
-        *rb->write++ = c;
-        if (rb->write == rb->buf + rb->size)
+        rb->buf[rb->write++] = c;
+        if (rb->write == rb->size)
                 rb->write = 0;
         return c;
 }
 
 int ringbuf_getc(ringbuf_t* rb) {
-        if (rb->read == rb->write)
+        if (ringbuf_empty(rb))
                 return EOF;
-        char c = *rb->read++;
-        if (rb->read == rb->buf + rb->size)
+        char c = rb->buf[rb->read++];
+        if (rb->read == rb->size)
                 rb->read = 0;
         return c;
 }
@@ -229,7 +241,7 @@ void uart_init(uint32_t bps) {
         // set frame format: 8 bit, no parity, 1 stop bit
         UCSR0C = (1 << UCSZ1) | (1 << UCSZ0);
         // enable serial receiver and transmitter
-        UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
+        UCSR0B = (1 << RXEN) | (1 << TXEN);// | (1 << RXCIE);
 
         uart_rx_ringbuf = ringbuf_init(uart_rx_buf, sizeof (uart_rx_buf));
         uart_tx_ringbuf = ringbuf_init(uart_tx_buf, sizeof (uart_tx_buf));
