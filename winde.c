@@ -121,8 +121,9 @@ int main() {
                "\n--------------------\n");
         printf("> ");
         for (;;) {
-                loop_until_bit_is_set(UCSR0A, RXC);
-                printf("READ %c\n", UDR0);
+                //loop_until_bit_is_set(UCSR0A, RXC);
+                //TOGGLE(OUT_BUZZER);
+                //printf("READ %c\n", UDR0);
                 //cmd_handler();
         }
         return 0;
@@ -241,7 +242,7 @@ void uart_init(uint32_t bps) {
         // set frame format: 8 bit, no parity, 1 stop bit
         UCSR0C = (1 << UCSZ1) | (1 << UCSZ0);
         // enable serial receiver and transmitter
-        UCSR0B = (1 << RXEN) | (1 << TXEN);// | (1 << RXCIE);
+        UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
 
         uart_rx_ringbuf = ringbuf_init(uart_rx_buf, sizeof (uart_rx_buf));
         uart_tx_ringbuf = ringbuf_init(uart_tx_buf, sizeof (uart_tx_buf));
@@ -277,9 +278,8 @@ ISR(USART0_RX_vect) {
 }
 
 ISR(USART0_UDRE_vect) {
-        int c = ringbuf_getc(uart_tx_ringbuf);
-        if (c != EOF)
-                UDR0 = c;
+        if (!ringbuf_empty(uart_tx_ringbuf))
+                UDR0 = ringbuf_getc(uart_tx_ringbuf);
         else
                 UCSR0B &= ~(1 << UDRIE);
 }
