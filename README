@@ -1,1 +1,13 @@
 Software für die Windenelektronik
+
+Vom Kühlkörper (links) nach rechts
+
+Anschluss Strom
+1. Schwarz
+2. Rot
+
+Anschluss JTAG
+1. Weiß TDI
+2. Orange TDO
+3. Grün TAS
+4. Braun TCK

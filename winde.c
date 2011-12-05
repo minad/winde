@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
+#include <util/atomic.h>
 #define VERSION "0"
 
 // Output port
@@ -101,8 +101,8 @@ void cmd_handler();
 void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
-ringbuf_t* uart_ringbuf;
-char       uart_buf[512];
+ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
+char       uart_rx_buf[512], uart_tx_buf[512];
 
 FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
 
@@ -156,9 +156,6 @@ void cmd_handler() {
         /*         cmd_exec(line); */
         /*         printf("> "); */
         /* } */
-        int c = ringbuf_getc(uart_ringbuf);
-        if (c != EOF)
-                printf("READ %c\n", c);
 }
 
 void cmd_help(int argc, char* argv[]) {
@@ -232,9 +229,10 @@ void uart_init(uint32_t bps) {
         // set frame format: 8 bit, no parity, 1 stop bit
         UCSR0C = (1 << UCSZ1) | (1 << UCSZ0);
         // enable serial receiver and transmitter
-        UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE) | (1 << TXCIE);
+        UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
 
-        uart_ringbuf = ringbuf_init(uart_buf, sizeof (uart_buf));
+        uart_rx_ringbuf = ringbuf_init(uart_rx_buf, sizeof (uart_rx_buf));
+        uart_tx_ringbuf = ringbuf_init(uart_tx_buf, sizeof (uart_tx_buf));
 
         stdout = &uart_stdout;
 }
@@ -242,16 +240,17 @@ void uart_init(uint32_t bps) {
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        // wait until transmit buffer is empty
-        loop_until_bit_is_set(UCSR0A, UDRE);
-        UDR0 = c;
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                ringbuf_putc(uart_tx_ringbuf, c);
+        }
+        UCSR0B |= (1 << UDRIE);
         return 0;
 }
 
 size_t uart_gets(char* s, size_t size) {
         char *p = s, *end = s + size - 1;
         while (p < end) {
-                int c = ringbuf_getc(uart_ringbuf);
+                int c = ringbuf_getc(uart_rx_ringbuf);
                 if (c == EOF || c == '\n')
                         break;
                 *p++ = c;
@@ -261,16 +260,14 @@ size_t uart_gets(char* s, size_t size) {
 }
 
 ISR(USART0_RX_vect) {
-        int c = UDR0;
-        //ringbuf_putc(uart_ringbuf, c);
-        //printf("WRITE %c\n", c);
-        //uart_putchar(c, 0);
+        ringbuf_putc(uart_rx_ringbuf, UDR0);
         TOGGLE(OUT_BUZZER);
 }
 
-ISR(USART0_TX_vect) {
-        //ringbuf_putc(uart_ringbuf, c);
-        //printf("WRITE %c\n", c);
-        //uart_putchar(c, 0);
-        //TOGGLE(OUT_BUZZER);
+ISR(USART0_UDRE_vect) {
+        int c = ringbuf_getc(uart_tx_ringbuf);
+        if (c != EOF)
+                UDR0 = c;
+        else
+                UCSR0B &= ~(1 << UDRIE);
 }

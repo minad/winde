@@ -9,7 +9,7 @@ COMMON = -mmcu=$(MCU)
 
 ## Compile options common for all C compilation units.
 CFLAGS = $(COMMON)
-CFLAGS += -Wall -gdwarf-2 -std=gnu99 -DF_CPU=8000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+CFLAGS += -Wall -gdwarf-2 -std=gnu99 -DF_CPU=4000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d
 
 INCLUDES=-I..
@@ -68,4 +68,4 @@ clean:
 -include $(shell mkdir dep 2>/dev/null) $(wildcard dep/*)
 
 dude: all
-	avrdude -V -P usb -p $(MCU) -c dragon_isp -e -U $(PROJECT).hex -v
+	avrdude -V -P /dev/ttyUSB0 -p $(MCU) -c jtag1 -e -U $(PROJECT).hex -v
