@@ -42,6 +42,7 @@
 #define OUT_LED6            A,2
 #define OUT_LED7            A,1
 #define OUT_LED8            A,0
+#define OUT_BUZZER          F,2
 
 #define OUT_VALVE1          C,2
 #define OUT_VALVE2          C,3
@@ -130,6 +131,7 @@ void system_init() {
         SET_OUTPUT(OUT_LED6);
         SET_OUTPUT(OUT_LED7);
         SET_OUTPUT(OUT_LED8);
+        SET_OUTPUT(OUT_BUZZER);
 
         SET_OUTPUT(OUT_VALVE1);
         SET_OUTPUT(OUT_VALVE2);
