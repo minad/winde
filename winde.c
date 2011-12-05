@@ -34,10 +34,42 @@
 #define _SET_INPUT(x,y)      _DDR(x,y) &= ~(1 << y)
 #define _IS_SET(x,y)         ((_PIN(x,y) & (1 << y)) != 0)
 
-#define IN_PARKBREMSE            A,0
-#define IN_KAPPVORRICHTUNG_LINKS A,0
-#define OUT_EINKUPPELN_LINKS     A,0
-// ...
+#define OUT_LED1            A,7
+#define OUT_LED2            A,6
+#define OUT_LED3            A,5
+#define OUT_LED4            A,4
+#define OUT_LED5            A,3
+#define OUT_LED6            A,2
+#define OUT_LED7            A,1
+#define OUT_LED8            A,0
+
+#define OUT_VALVE1          C,2
+#define OUT_VALVE2          C,3
+#define OUT_VALVE3          C,4
+#define OUT_VALVE4          C,5
+#define OUT_VALVE5          C,6
+#define OUT_VALVE6          C,7
+
+#define OUT_IGNITION_BRIGE  C,1
+#define OUT_ENABLE_IGNITION C,0
+#define OUT_LATCH_DISABLE   B,6
+
+#define IN_SWITCH1          E,2
+#define IN_SWITCH2          E,3
+#define IN_SWITCH3          E,4
+#define IN_SWITCH4          E,5
+#define IN_SWITCH5          E,6
+#define IN_SWITCH6          B,5
+
+#define IN_SYSTEM1          D,7 // Schließer
+#define IN_SYSTEM2          D,6
+#define IN_SYSTEM3          D,5
+#define IN_SYSTEM4          D,4
+#define IN_SYSTEM5          D,3
+#define IN_SYSTEM6          D,2
+#define IN_SYSTEM7          D,1
+#define IN_SYSTEM8          D,0 // Öffner
+#define IN_SYSTEM9          B,7 // Öffner
 
 typedef struct {
 	char *read;
@@ -90,6 +122,26 @@ int main() {
 }
 
 void system_init() {
+        SET_OUTPUT(OUT_LED1);
+        SET_OUTPUT(OUT_LED2);
+        SET_OUTPUT(OUT_LED3);
+        SET_OUTPUT(OUT_LED4);
+        SET_OUTPUT(OUT_LED5);
+        SET_OUTPUT(OUT_LED6);
+        SET_OUTPUT(OUT_LED7);
+        SET_OUTPUT(OUT_LED8);
+
+        SET_OUTPUT(OUT_VALVE1);
+        SET_OUTPUT(OUT_VALVE2);
+        SET_OUTPUT(OUT_VALVE3);
+        SET_OUTPUT(OUT_VALVE4);
+        SET_OUTPUT(OUT_VALVE5);
+        SET_OUTPUT(OUT_VALVE6);
+
+        SET_OUTPUT(OUT_IGNITION_BRIGE);
+        SET_OUTPUT(OUT_ENABLE_IGNITION);
+        SET_OUTPUT(OUT_LATCH_DISABLE);
+
         uart_init(9600);
         sei();
 }
