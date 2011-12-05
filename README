@@ -11,3 +11,6 @@ Anschluss JTAG
 2. Orange TDO
 3. Grün TAS
 4. Braun TCK
+
+Serial interface:
+minicom -D /dev/ttyUSB1 -b 9600
