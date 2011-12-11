@@ -72,6 +72,8 @@
 #define IN_SYSTEM8          D,0 // Öffner
 #define IN_SYSTEM9          B,7 // Öffner
 
+#define UART_BAUD_RATE      9600
+
 typedef struct {
 	size_t read;
         size_t write;
@@ -95,7 +97,7 @@ int ringbuf_empty(ringbuf_t* rb);
 int ringbuf_putc(ringbuf_t* rb, char c);
 int ringbuf_getc(ringbuf_t* rb);
 
-void   uart_init(uint32_t bps);
+void   uart_init(uint32_t baud);
 int    uart_putchar(char c, FILE* fp);
 size_t uart_gets(char* s, size_t size);
 
@@ -151,7 +153,7 @@ void system_init() {
         SET_OUTPUT(OUT_ENABLE_IGNITION);
         SET_OUTPUT(OUT_LATCH_DISABLE);
 
-        uart_init(9600);
+        uart_init(UART_BAUD_RATE);
         sei();
 }
 
@@ -232,8 +234,8 @@ int ringbuf_getc(ringbuf_t* rb) {
         return c;
 }
 
-void uart_init(uint32_t bps) {
-        uint32_t baud = F_CPU / (bps * 16) - 1;
+void uart_init(uint32_t baud) {
+        baud = F_CPU / (baud * 16) - 1;
 
         // Set baud rate
         UBRR0H = baud >> 8;
