@@ -3,8 +3,8 @@ Software für die Windenelektronik
 Vom Kühlkörper (links) nach rechts
 
 Anschluss Strom
-1. Schwarz
-2. Rot
+1. Schwarz/Rot -
+2. Gelb-Lila +
 
 Anschluss JTAG
 1. Weiß TDI
@@ -14,3 +14,28 @@ Anschluss JTAG
 
 Serial interface:
 minicom -D /dev/ttyUSB1 -b 9600
+
+Eingänge/Ausgänge:
+LED1 Eingekuppelt links
+LED2 Eingekuppelt rechts
+LED3 Handbremse
+LED4 Kappvorrichtung
+LED5 Übertemperatur
+LED6 Power
+
+OUT4 Gassperre Windenschleppkupplung
+OUT5 Trommelbremse
+OUT6 Auszugsbremsen
+
+SWITCH1 Trommel 1 ein
+SWITCH2 Trommel 2 ein
+SWITCH3 Auszuugsbremse auf
+SWITCH5 Auskuppeln
+
+IN1 Bremse getreten
+IN2 Gangwarnung
+IN3 Drehzahl links
+IN4 Drehzahl rechts
+IN5 Übertemperatur Motor
+IN6 Übertemperatur Wandler
+IN8 Kontrolle Handbremse
