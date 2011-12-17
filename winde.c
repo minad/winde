@@ -99,7 +99,7 @@ int ringbuf_getc(ringbuf_t* rb);
 
 void   uart_init(uint32_t baud);
 int    uart_putchar(char c, FILE* fp);
-size_t uart_gets(char* s, size_t size);
+int    uart_getc();
 
 void cmd_handler();
 void cmd_help(int argc, char* argv[]);
@@ -121,17 +121,15 @@ int main() {
         printf("\n--------------------\n"
                "Steuersoftware Winde"
                "\n--------------------\n");
-        printf("> ");
         for (;;) {
-                //loop_until_bit_is_set(UCSR0A, RXC);
-                //TOGGLE(OUT_BUZZER);
-                //printf("READ %c\n", UDR0);
-                //cmd_handler();
+                cmd_handler();
         }
         return 0;
 }
 
 void system_init() {
+        OSCCAL = 0xA1;
+
         SET_OUTPUT(OUT_LED1);
         SET_OUTPUT(OUT_LED2);
         SET_OUTPUT(OUT_LED3);
@@ -158,10 +156,21 @@ void system_init() {
 }
 
 void cmd_handler() {
-        char line[64];
-        if (uart_gets(line, sizeof (line)) > 0) {
-                cmd_exec(line);
+        static char line[64];
+        static int size = -1;
+        if (size < 0) {
                 printf("> ");
+                size = 0;
+        }
+        int c = uart_getc();
+        if (c == EOF) {
+                if (c == '\n') {
+                        line[size] = 0;
+                        cmd_exec(line);
+                        size = -1;
+                } else if (size + 1 < sizeof (line)) {
+                        line[size++] = c;
+                }
         }
 }
 
@@ -255,28 +264,20 @@ void uart_init(uint32_t baud) {
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-                ringbuf_putc(uart_tx_ringbuf, c);
+        while (ringbuf_full(uart_tx_ringbuf)) {
+                // wait
         }
+        ringbuf_putc(uart_tx_ringbuf, c);
         UCSR0B |= (1 << UDRIE);
         return 0;
 }
 
-size_t uart_gets(char* s, size_t size) {
-        char *p = s, *end = s + size - 1;
-        while (p < end) {
-                int c = ringbuf_getc(uart_rx_ringbuf);
-                if (c == EOF || c == '\n')
-                        break;
-                *p++ = c;
-        }
-        *p = '\0';
-        return p - s;
+int uart_getc() {
+        return ringbuf_getc(uart_rx_ringbuf);
 }
 
 ISR(USART0_RX_vect) {
         ringbuf_putc(uart_rx_ringbuf, UDR0);
-        TOGGLE(OUT_BUZZER);
 }
 
 ISR(USART0_UDRE_vect) {
