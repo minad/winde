@@ -7,110 +7,8 @@
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 
-#define VERSION                 "0"
-#define UART_BAUD_RATE          9600
-
-// Output port
-#define PORT(x)                 _PORT(x)
-// Data direction register
-#define DDR(x)                  _DDR(x)
-// Input port
-#define PIN(x)                  _PIN(x)
-#define BIT(x)                  _BIT(x)
-#define RESET(x)                _RESET(x)
-#define SET(x)                  _SET(x)
-#define TOGGLE(x)               _TOGGLE(x)
-#define SET_OUTPUT(x)           _SET_OUTPUT(x)
-#define SET_INPUT(x)            _SET_INPUT(x)
-#define SET_INPUT_PULLUP(x)     do { _SET_INPUT(x); _SET(x); } while (0)
-#define IS_SET(x)               _IS_SET(x)
-
-#define _PORT(x,y)              PORT ## x
-#define _DDR(x,y)               DDR ## x
-#define _PIN(x,y)               PIN ## x
-#define _BIT(x,y)               y
-#define _RESET(x,y)             _PORT(x,y) &= ~(1 << y)
-#define _SET(x,y)               _PORT(x,y) |= (1 << y)
-#define _TOGGLE(x,y)            _PORT(x,y) ^= (1 << y)
-#define _SET_OUTPUT(x,y)        _DDR(x,y) |= (1 << y)
-#define _SET_INPUT(x,y)         _DDR(x,y) &= ~(1 << y)
-#define _IS_SET(x,y)            ((_PIN(x,y) & (1 << y)) != 0)
-
-#define OUT_LED1                A,7
-#define OUT_LED2                A,6
-#define OUT_LED3                A,5
-#define OUT_LED4                A,4
-#define OUT_LED5                A,3
-#define OUT_LED6                A,2
-#define OUT_LED7                A,1
-#define OUT_LED8                A,0
-#define OUT_BUZZER              F,2
-
-#define OUT_SYSTEM1             C,2
-#define OUT_SYSTEM2             C,3
-#define OUT_SYSTEM3             C,4
-#define OUT_SYSTEM4             C,5
-#define OUT_SYSTEM5             C,6
-#define OUT_SYSTEM6             C,7
-
-#define OUT_ZUENDUNGSBRUECKE    C,1
-#define OUT_ZUENDUNG_AN         C,0
-#define OUT_LATCH_DISABLE       B,6
-
-#define IN_SCHALTER1            E,2
-#define IN_SCHALTER2            E,3
-#define IN_SCHALTER3            E,4
-#define IN_SCHALTER4            E,5
-#define IN_SCHALTER5            E,6
-#define IN_SCHALTER6            B,5
-
-#define IN_SYSTEM1              D,7 // Schließer
-#define IN_SYSTEM2              D,6
-#define IN_SYSTEM3              D,5
-#define IN_SYSTEM4              D,4
-#define IN_SYSTEM5              D,3
-#define IN_SYSTEM6              D,2
-#define IN_SYSTEM7              D,1
-#define IN_SYSTEM8              D,0 // Öffner
-#define IN_SYSTEM9              B,7 // Öffner
-
-#define OUT_LED_EINGEKUPPELT1   OUT_LED1
-#define OUT_LED_EINGEKUPPELT2   OUT_LED1
-#define OUT_LED_HANDBREMSE      OUT_LED3
-#define OUT_LED_KAPPVORRICHTUNG OUT_LED4
-#define OUT_LED_TEMPERATUR      OUT_LED5
-#define OUT_LED_POWER           OUT_LED6
-
-#define OUT_GASSPERRE           OUT_SYSTEM4
-#define OUT_TROMMELBREMSE       OUT_SYSTEM5
-#define OUT_AUSZUGSBREMSE       OUT_SYSTEM6
-
-#define IN_SCHALTER_TROMMEL1    IN_SCHALTER1
-#define IN_SCHALTER_TROMMEL2    IN_SCHALTER2
-#define IN_SCHALTER_BREMSE_AUF  IN_SCHALTER3
-#define IN_SCHALTER_AUSKUPPELN  IN_SCHALTER5
-
-#define IN_BREMSE_GETRETEN      IN_SYSTEM1
-#define IN_GANGWARNUNG          IN_SYSTEM2
-#define IN_DREHZAHL1            IN_SYSTEM3
-#define IN_DREHZAHL2            IN_SYSTEM4
-#define IN_TEMPERATUR_MOTOR     IN_SYSTEM5
-#define IN_TEMPERATUR_WANDLER   IN_SYSTEM6
-#define IN_HANDBREMSE           IN_SYSTEM8
-
-struct {
-        int schalter_trommel1   : 1;
-        int schalter_trommel2   : 1;
-        int schalter_bremse_auf : 1;
-        int schalter_auskuppeln : 1;
-        int bremse_getreten     : 1;
-        int gangwarnung         : 1;
-        int drehzahl1           : 1;
-        int drehzahl2           : 1;
-        int temperatur_motor    : 1;
-        int temperatur_wandler  : 1;
-        int handbremse          : 1;
-} in;
+#define VERSION        "0"
+#define UART_BAUD_RATE 9600
 
 typedef struct {
 	size_t read;
@@ -125,21 +23,23 @@ typedef struct {
 } cmd_t;
 
 void system_init();
-void read_inputs();
-void set_outputs();
+void ports_init();
+void ports_read();
+void ports_write();
+void ports_update();
 
 void cmd_exec(char*);
 
 ringbuf_t* ringbuf_init(void* buf, size_t size);
-void ringbuf_reset(ringbuf_t* rb);
-int ringbuf_full(ringbuf_t* rb);
-int ringbuf_empty(ringbuf_t* rb);
-int ringbuf_putc(ringbuf_t* rb, char c);
-int ringbuf_getc(ringbuf_t* rb);
+void       ringbuf_reset(ringbuf_t* rb);
+int        ringbuf_full(ringbuf_t* rb);
+int        ringbuf_empty(ringbuf_t* rb);
+int        ringbuf_putc(ringbuf_t* rb, char c);
+int        ringbuf_getc(ringbuf_t* rb);
 
-void   uart_init(uint32_t baud);
-int    uart_putchar(char c, FILE* fp);
-int    uart_getc();
+void uart_init(uint32_t baud);
+int  uart_putchar(char c, FILE* fp);
+int  uart_getc();
 
 void cmd_handler();
 void cmd_help(int argc, char* argv[]);
@@ -147,7 +47,7 @@ void cmd_in(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
 ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
-char       uart_rx_buf[256], uart_tx_buf[256];
+char       uart_rx_buf[32], uart_tx_buf[32];
 
 FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
 
@@ -158,14 +58,27 @@ cmd_t cmd_list[] = {
         { 0,         0           },
 };
 
+struct {
+#define IN3(name, port, bit) int name : 1;
+#define IN4(name, port, bit, alias) union { int name : 1; int alias : 1; };
+#include "ports.h"
+} in;
+
+struct {
+#define OUT3(name, port, bit) int name : 1;
+#define OUT4(name, port, bit, alias) union { int name : 1; int alias : 1; };
+#include "ports.h"
+} out;
+
 int main() {
         system_init();
         printf("\n--------------------\n"
                "Steuersoftware Winde"
                "\n--------------------\n");
         for (;;) {
-                read_inputs();
-                set_outputs();
+                ports_read();
+                ports_update();
+                ports_write();
                 cmd_handler();
         }
         return 0;
@@ -173,47 +86,28 @@ int main() {
 
 void system_init() {
         OSCCAL = 0xA1;
-
-        SET_OUTPUT(OUT_LED1);
-        SET_OUTPUT(OUT_LED2);
-        SET_OUTPUT(OUT_LED3);
-        SET_OUTPUT(OUT_LED4);
-        SET_OUTPUT(OUT_LED5);
-        SET_OUTPUT(OUT_LED6);
-        SET_OUTPUT(OUT_LED7);
-        SET_OUTPUT(OUT_LED8);
-        SET_OUTPUT(OUT_BUZZER);
-
-        SET_OUTPUT(OUT_SYSTEM1);
-        SET_OUTPUT(OUT_SYSTEM2);
-        SET_OUTPUT(OUT_SYSTEM3);
-        SET_OUTPUT(OUT_SYSTEM4);
-        SET_OUTPUT(OUT_SYSTEM5);
-        SET_OUTPUT(OUT_SYSTEM6);
-
-        SET_OUTPUT(OUT_ZUENDUNGSBRUECKE);
-        SET_OUTPUT(OUT_ZUENDUNG_AN);
-        SET_OUTPUT(OUT_LATCH_DISABLE);
-
+        ports_init();
         uart_init(UART_BAUD_RATE);
         sei();
 }
 
-void read_inputs() {
-        in.schalter_trommel1   = IS_SET(IN_SCHALTER_TROMMEL1);
-        in.schalter_trommel2   = IS_SET(IN_SCHALTER_TROMMEL2);
-        in.schalter_bremse_auf = IS_SET(IN_SCHALTER_BREMSE_AUF);
-        in.schalter_auskuppeln = IS_SET(IN_SCHALTER_AUSKUPPELN);
-        in.bremse_getreten     = IS_SET(IN_BREMSE_GETRETEN);
-        in.gangwarnung         = IS_SET(IN_GANGWARNUNG);
-        in.drehzahl1           = IS_SET(IN_DREHZAHL1);
-        in.drehzahl2           = IS_SET(IN_DREHZAHL2);
-        in.temperatur_motor    = IS_SET(IN_TEMPERATUR_MOTOR);
-        in.temperatur_wandler  = IS_SET(IN_TEMPERATUR_WANDLER);
-        in.handbremse          = IS_SET(IN_HANDBREMSE);
+void ports_init() {
+#define OUT3(name, port, bit) DDR ## port |= (1 << bit);
+#include "ports.h"
 }
 
-void set_outputs() {
+void ports_read() {
+#define IN3(name, port, bit) in.name = (PIN ## port >> bit) & 1;
+#include "ports.h"
+}
+
+void ports_write() {
+#define OUT3(name, port, bit) if (out.name) { PORT ## port |= (1 << bit); } else { PORT ## port &= ~(1 << bit); }
+#include "ports.h"
+}
+
+void ports_update() {
+        out.led_eingekuppelt1 = in.schalter_trommel1;
 }
 
 void cmd_handler() {
@@ -239,28 +133,13 @@ void cmd_handler() {
 
 void cmd_in(int argc, char* argv[]) {
         printf("Inputs:\n"
-               "  schalter_trommel1   = %d\n"
-               "  schalter_trommel2   = %d\n"
-               "  schalter_bremse_auf = %d\n"
-               "  schalter_auskuppeln = %d\n"
-               "  bremse_getreten     = %d\n"
-               "  gangwarnung         = %d\n"
-               "  drehzahl1           = %d\n"
-               "  drehzahl2           = %d\n"
-               "  temperatur_motor    = %d\n"
-               "  temperatur_wandler  = %d\n"
-               "  handbremse          = %d\n",
-               in.schalter_trommel1,
-               in.schalter_trommel2,
-               in.schalter_bremse_auf,
-               in.schalter_auskuppeln,
-               in.bremse_getreten,
-               in.gangwarnung,
-               in.drehzahl1,
-               in.drehzahl2,
-               in.temperatur_motor,
-               in.temperatur_wandler,
-               in.handbremse);
+#define IN3(name, port, bit)        #name" = %d\n"
+#define IN4(name, port, bit, alias) #name" ("#alias") = %d\n"
+#include "ports.h"
+               "%c",
+#define IN3(name, port, bit) in.name,
+#include "ports.h"
+               '\n');
 }
 
 void cmd_help(int argc, char* argv[]) {
