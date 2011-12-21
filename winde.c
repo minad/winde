@@ -267,7 +267,7 @@ void cmd_help(int argc, char* argv[]) {
         printf("List of available commands:\n");
         for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
                 printf("%s\n", cmd->name);
-        printf("\n");
+        putchar('\n');
 }
 
 void cmd_version(int argc, char* argv[]) {
