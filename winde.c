@@ -224,12 +224,14 @@ void cmd_handler() {
                 size = 0;
         }
         int c = uart_getc();
-        if (c == EOF) {
-                if (c == '\n') {
+        if (c != EOF) {
+                if (c == '\r') {
+                        putchar('\n');
                         line[size] = 0;
                         cmd_exec(line);
                         size = -1;
                 } else if (size + 1 < sizeof (line)) {
+                        putchar(c);
                         line[size++] = c;
                 }
         }
@@ -286,9 +288,10 @@ void cmd_exec(char* line) {
                 for (cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
                         if (!strcmp(cmd->name, argv[0])) {
                                 cmd->fn(argc, argv);
-                                break;
+                                return;
                         }
                 }
+                printf("Command not found %s\n", argv[0]);
         }
 }
 
@@ -364,7 +367,6 @@ int uart_getc() {
 }
 
 ISR(USART0_RX_vect) {
-        TOGGLE(OUT_BUZZER);
         ringbuf_putc(uart_rx_ringbuf, UDR0);
 }
 
