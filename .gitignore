@@ -4,4 +4,6 @@ build/*.hex
 build/*.lss
 build/*.map
 build/*.o
+build/*.i
+build/*.s
 build/dep/*
