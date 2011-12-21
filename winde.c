@@ -34,43 +34,43 @@
 #define _SET_INPUT(x,y)      _DDR(x,y) &= ~(1 << y)
 #define _IS_SET(x,y)         ((_PIN(x,y) & (1 << y)) != 0)
 
-#define OUT_LED1            A,7
-#define OUT_LED2            A,6
-#define OUT_LED3            A,5
-#define OUT_LED4            A,4
-#define OUT_LED5            A,3
-#define OUT_LED6            A,2
-#define OUT_LED7            A,1
-#define OUT_LED8            A,0
-#define OUT_BUZZER          F,2
+#define OUT_LED1                A,7
+#define OUT_LED2                A,6
+#define OUT_LED3                A,5
+#define OUT_LED4                A,4
+#define OUT_LED5                A,3
+#define OUT_LED6                A,2
+#define OUT_LED7                A,1
+#define OUT_LED8                A,0
+#define OUT_BUZZER              F,2
 
-#define OUT_VALVE1          C,2
-#define OUT_VALVE2          C,3
-#define OUT_VALVE3          C,4
-#define OUT_VALVE4          C,5
-#define OUT_VALVE5          C,6
-#define OUT_VALVE6          C,7
+#define OUT_SYSTEM1             C,2
+#define OUT_SYSTEM2             C,3
+#define OUT_SYSTEM3             C,4
+#define OUT_SYSTEM4             C,5
+#define OUT_SYSTEM5             C,6
+#define OUT_SYSTEM6             C,7
 
-#define OUT_IGNITION_BRIGE  C,1
-#define OUT_ENABLE_IGNITION C,0
-#define OUT_LATCH_DISABLE   B,6
+#define OUT_ZUENDUNGSBRUECKE    C,1
+#define OUT_ZUENDUNG_AN         C,0
+#define OUT_LATCH_DISABLE       B,6
 
-#define IN_SWITCH1          E,2
-#define IN_SWITCH2          E,3
-#define IN_SWITCH3          E,4
-#define IN_SWITCH4          E,5
-#define IN_SWITCH5          E,6
-#define IN_SWITCH6          B,5
+#define IN_SCHALTER1            E,2
+#define IN_SCHALTER2            E,3
+#define IN_SCHALTER3            E,4
+#define IN_SCHALTER4            E,5
+#define IN_SCHALTER5            E,6
+#define IN_SCHALTER6            B,5
 
-#define IN_SYSTEM1          D,7 // Schließer
-#define IN_SYSTEM2          D,6
-#define IN_SYSTEM3          D,5
-#define IN_SYSTEM4          D,4
-#define IN_SYSTEM5          D,3
-#define IN_SYSTEM6          D,2
-#define IN_SYSTEM7          D,1
-#define IN_SYSTEM8          D,0 // Öffner
-#define IN_SYSTEM9          B,7 // Öffner
+#define IN_SYSTEM1              D,7 // Schließer
+#define IN_SYSTEM2              D,6
+#define IN_SYSTEM3              D,5
+#define IN_SYSTEM4              D,4
+#define IN_SYSTEM5              D,3
+#define IN_SYSTEM6              D,2
+#define IN_SYSTEM7              D,1
+#define IN_SYSTEM8              D,0 // Öffner
+#define IN_SYSTEM9              B,7 // Öffner
 
 #define OUT_LED_EINGEKUPPELT1   OUT_LED1
 #define OUT_LED_EINGEKUPPELT2   OUT_LED1
@@ -79,14 +79,14 @@
 #define OUT_LED_TEMPERATUR      OUT_LED5
 #define OUT_LED_POWER           OUT_LED6
 
-#define OUT_GASSPERRE           OUT_VALVE4
-#define OUT_TROMMELBREMSE       OUT_VALVE5
-#define OUT_AUSZUGSBREMSE       OUT_VALVE6
+#define OUT_GASSPERRE           OUT_SYSTEM4
+#define OUT_TROMMELBREMSE       OUT_SYSTEM5
+#define OUT_AUSZUGSBREMSE       OUT_SYSTEM6
 
-#define IN_SWITCH_TROMMEL1      IN_SWITCH1
-#define IN_SWITCH_TROMMEL2      IN_SWITCH2
-#define IN_SWITCH_BREMSE_AUF    IN_SWITCH3
-#define IN_SWITCH_AUSKUPPELN    IN_SWITCH5
+#define IN_SCHALTER_TROMMEL1    IN_SCHALTER1
+#define IN_SCHALTER_TROMMEL2    IN_SCHALTER2
+#define IN_SCHALTER_BREMSE_AUF  IN_SCHALTER3
+#define IN_SCHALTER_AUSKUPPELN  IN_SCHALTER5
 
 #define IN_BREMSE_GETRETEN      IN_SYSTEM1
 #define IN_GANGWARNUNG          IN_SYSTEM2
@@ -96,7 +96,7 @@
 #define IN_TEMPERATUR_WANDLER   IN_SYSTEM6
 #define IN_HANDBREMSE           IN_SYSTEM8
 
-#define UART_BAUD_RATE      9600
+#define UART_BAUD_RATE          9600
 
 typedef struct {
 	size_t read;
@@ -164,15 +164,15 @@ void system_init() {
         SET_OUTPUT(OUT_LED8);
         SET_OUTPUT(OUT_BUZZER);
 
-        SET_OUTPUT(OUT_VALVE1);
-        SET_OUTPUT(OUT_VALVE2);
-        SET_OUTPUT(OUT_VALVE3);
-        SET_OUTPUT(OUT_VALVE4);
-        SET_OUTPUT(OUT_VALVE5);
-        SET_OUTPUT(OUT_VALVE6);
+        SET_OUTPUT(OUT_SYSTEM1);
+        SET_OUTPUT(OUT_SYSTEM2);
+        SET_OUTPUT(OUT_SYSTEM3);
+        SET_OUTPUT(OUT_SYSTEM4);
+        SET_OUTPUT(OUT_SYSTEM5);
+        SET_OUTPUT(OUT_SYSTEM6);
 
-        SET_OUTPUT(OUT_IGNITION_BRIGE);
-        SET_OUTPUT(OUT_ENABLE_IGNITION);
+        SET_OUTPUT(OUT_ZUENDUNGSBRUECKE);
+        SET_OUTPUT(OUT_ZUENDUNG_AN);
         SET_OUTPUT(OUT_LATCH_DISABLE);
 
         uart_init(UART_BAUD_RATE);
