@@ -98,6 +98,20 @@
 #define IN_TEMPERATUR_WANDLER   IN_SYSTEM6
 #define IN_HANDBREMSE           IN_SYSTEM8
 
+struct {
+        int schalter_trommel1   : 1;
+        int schalter_trommel2   : 1;
+        int schalter_bremse_auf : 1;
+        int schalter_auskuppeln : 1;
+        int bremse_getreten     : 1;
+        int gangwarnung         : 1;
+        int drehzahl1           : 1;
+        int drehzahl2           : 1;
+        int temperatur_motor    : 1;
+        int temperatur_wandler  : 1;
+        int handbremse          : 1;
+} in;
+
 typedef struct {
 	size_t read;
         size_t write;
@@ -111,6 +125,8 @@ typedef struct {
 } cmd_t;
 
 void system_init();
+void read_inputs();
+void set_outputs();
 
 void cmd_exec(char*);
 
@@ -146,6 +162,8 @@ int main() {
                "Steuersoftware Winde"
                "\n--------------------\n");
         for (;;) {
+                read_inputs();
+                set_outputs();
                 cmd_handler();
         }
         return 0;
@@ -177,6 +195,23 @@ void system_init() {
 
         uart_init(UART_BAUD_RATE);
         sei();
+}
+
+void read_inputs() {
+        in.schalter_trommel1   = IS_SET(IN_SCHALTER_TROMMEL1);
+        in.schalter_trommel2   = IS_SET(IN_SCHALTER_TROMMEL2);
+        in.schalter_bremse_auf = IS_SET(IN_SCHALTER_BREMSE_AUF);
+        in.schalter_auskuppeln = IS_SET(IN_SCHALTER_AUSKUPPELN);
+        in.bremse_getreten     = IS_SET(IN_BREMSE_GETRETEN);
+        in.gangwarnung         = IS_SET(IN_GANGWARNUNG);
+        in.drehzahl1           = IS_SET(IN_DREHZAHL1);
+        in.drehzahl2           = IS_SET(IN_DREHZAHL2);
+        in.temperatur_motor    = IS_SET(IN_TEMPERATUR_MOTOR);
+        in.temperatur_wandler  = IS_SET(IN_TEMPERATUR_WANDLER);
+        in.handbremse          = IS_SET(IN_HANDBREMSE);
+}
+
+void set_outputs() {
 }
 
 void cmd_handler() {
