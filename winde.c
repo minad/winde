@@ -237,7 +237,7 @@ void cmd_handler() {
 
 void cmd_in(int argc, char* argv[]) {
         printf("Inputs:\n"
-               "  schalter_trommel1   = %d\n",
+               "  schalter_trommel1   = %d\n"
                "  schalter_trommel2   = %d\n"
                "  schalter_bremse_auf = %d\n"
                "  schalter_auskuppeln = %d\n"
@@ -364,6 +364,7 @@ int uart_getc() {
 }
 
 ISR(USART0_RX_vect) {
+        TOGGLE(OUT_BUZZER);
         ringbuf_putc(uart_rx_ringbuf, UDR0);
 }
 
