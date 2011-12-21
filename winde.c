@@ -143,6 +143,7 @@ int    uart_getc();
 
 void cmd_handler();
 void cmd_help(int argc, char* argv[]);
+void cmd_in(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
 ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
@@ -151,6 +152,7 @@ char       uart_rx_buf[256], uart_tx_buf[256];
 FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
 
 cmd_t cmd_list[] = {
+        { "in",      cmd_in      },
         { "help",    cmd_help    },
         { "version", cmd_version },
         { 0,         0           },
@@ -231,6 +233,32 @@ void cmd_handler() {
                         line[size++] = c;
                 }
         }
+}
+
+void cmd_in(int argc, char* argv[]) {
+        printf("Inputs:\n"
+               "  schalter_trommel1   = %d\n",
+               "  schalter_trommel2   = %d\n"
+               "  schalter_bremse_auf = %d\n"
+               "  schalter_auskuppeln = %d\n"
+               "  bremse_getreten     = %d\n"
+               "  gangwarnung         = %d\n"
+               "  drehzahl1           = %d\n"
+               "  drehzahl2           = %d\n"
+               "  temperatur_motor    = %d\n"
+               "  temperatur_wandler  = %d\n"
+               "  handbremse          = %d\n",
+               in.schalter_trommel1,
+               in.schalter_trommel2,
+               in.schalter_bremse_auf,
+               in.schalter_auskuppeln,
+               in.bremse_getreten,
+               in.gangwarnung,
+               in.drehzahl1,
+               in.drehzahl2,
+               in.temperatur_motor,
+               in.temperatur_wandler,
+               in.handbremse);
 }
 
 void cmd_help(int argc, char* argv[]) {
