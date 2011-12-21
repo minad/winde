@@ -6,33 +6,35 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
-#define VERSION "0"
+
+#define VERSION                 "0"
+#define UART_BAUD_RATE          9600
 
 // Output port
-#define PORT(x)              _PORT(x)
+#define PORT(x)                 _PORT(x)
 // Data direction register
-#define DDR(x)               _DDR(x)
+#define DDR(x)                  _DDR(x)
 // Input port
-#define PIN(x)               _PIN(x)
-#define BIT(x)               _BIT(x)
-#define RESET(x)             _RESET(x)
-#define SET(x)               _SET(x)
-#define TOGGLE(x)            _TOGGLE(x)
-#define SET_OUTPUT(x)        _SET_OUTPUT(x)
-#define SET_INPUT(x)         _SET_INPUT(x)
-#define SET_INPUT_PULLUP(x)  do { _SET_INPUT(x); _SET(x); } while (0)
-#define IS_SET(x)            _IS_SET(x)
+#define PIN(x)                  _PIN(x)
+#define BIT(x)                  _BIT(x)
+#define RESET(x)                _RESET(x)
+#define SET(x)                  _SET(x)
+#define TOGGLE(x)               _TOGGLE(x)
+#define SET_OUTPUT(x)           _SET_OUTPUT(x)
+#define SET_INPUT(x)            _SET_INPUT(x)
+#define SET_INPUT_PULLUP(x)     do { _SET_INPUT(x); _SET(x); } while (0)
+#define IS_SET(x)               _IS_SET(x)
 
-#define _PORT(x,y)           PORT ## x
-#define _DDR(x,y)            DDR ## x
-#define _PIN(x,y)            PIN ## x
-#define _BIT(x,y)            y
-#define _RESET(x,y)          _PORT(x,y) &= ~(1 << y)
-#define _SET(x,y)            _PORT(x,y) |= (1 << y)
-#define _TOGGLE(x,y)         _PORT(x,y) ^= (1 << y)
-#define _SET_OUTPUT(x,y)     _DDR(x,y) |= (1 << y)
-#define _SET_INPUT(x,y)      _DDR(x,y) &= ~(1 << y)
-#define _IS_SET(x,y)         ((_PIN(x,y) & (1 << y)) != 0)
+#define _PORT(x,y)              PORT ## x
+#define _DDR(x,y)               DDR ## x
+#define _PIN(x,y)               PIN ## x
+#define _BIT(x,y)               y
+#define _RESET(x,y)             _PORT(x,y) &= ~(1 << y)
+#define _SET(x,y)               _PORT(x,y) |= (1 << y)
+#define _TOGGLE(x,y)            _PORT(x,y) ^= (1 << y)
+#define _SET_OUTPUT(x,y)        _DDR(x,y) |= (1 << y)
+#define _SET_INPUT(x,y)         _DDR(x,y) &= ~(1 << y)
+#define _IS_SET(x,y)            ((_PIN(x,y) & (1 << y)) != 0)
 
 #define OUT_LED1                A,7
 #define OUT_LED2                A,6
@@ -95,8 +97,6 @@
 #define IN_TEMPERATUR_MOTOR     IN_SYSTEM5
 #define IN_TEMPERATUR_WANDLER   IN_SYSTEM6
 #define IN_HANDBREMSE           IN_SYSTEM8
-
-#define UART_BAUD_RATE          9600
 
 typedef struct {
 	size_t read;
