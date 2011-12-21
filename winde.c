@@ -59,14 +59,14 @@ cmd_t cmd_list[] = {
 };
 
 struct {
-#define IN3(name, port, bit) int name : 1;
-#define IN4(name, port, bit, alias) union { int name : 1; int alias : 1; };
+#define INPUT(name, port, bit) int name : 1;
+#define INPUT_WITH_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
 #include "ports.h"
 } in;
 
 struct {
-#define OUT3(name, port, bit) int name : 1;
-#define OUT4(name, port, bit, alias) union { int name : 1; int alias : 1; };
+#define OUTPUT(name, port, bit) int name : 1;
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
 #include "ports.h"
 } out;
 
@@ -92,17 +92,17 @@ void system_init() {
 }
 
 void ports_init() {
-#define OUT3(name, port, bit) DDR ## port |= (1 << bit);
+#define OUTPUT(name, port, bit) DDR ## port |= (1 << bit);
 #include "ports.h"
 }
 
 void ports_read() {
-#define IN3(name, port, bit) in.name = (PIN ## port >> bit) & 1;
+#define INPUT(name, port, bit) in.name = (PIN ## port >> bit) & 1;
 #include "ports.h"
 }
 
 void ports_write() {
-#define OUT3(name, port, bit) if (out.name) { PORT ## port |= (1 << bit); } else { PORT ## port &= ~(1 << bit); }
+#define OUTPUT(name, port, bit) if (out.name) { PORT ## port |= (1 << bit); } else { PORT ## port &= ~(1 << bit); }
 #include "ports.h"
 }
 
@@ -133,11 +133,11 @@ void cmd_handler() {
 
 void cmd_in(int argc, char* argv[]) {
         printf("Inputs:\n"
-#define IN3(name, port, bit)        #name" = %d\n"
-#define IN4(name, port, bit, alias) #name" ("#alias") = %d\n"
+#define INPUT(name, port, bit)        #name" = %d\n"
+#define INPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
 #include "ports.h"
                "%c",
-#define IN3(name, port, bit) in.name,
+#define INPUT(name, port, bit) in.name,
 #include "ports.h"
                '\n');
 }
