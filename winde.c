@@ -92,7 +92,7 @@ void system_init() {
 }
 
 void ports_init() {
-#define OUTPUT(name, port, bit) DDR ## port |= (1 << bit);
+#define OUTPUT(name, port, bit) DDR ## port |= (1 << bit); out.name = 0;
 #include "ports.h"
 }
 
