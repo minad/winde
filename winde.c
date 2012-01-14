@@ -41,6 +41,7 @@ void uart_init(uint32_t baud);
 int  uart_putchar(char c, FILE* fp);
 int  uart_getc();
 
+void usage(const char*);
 void cmd_handler();
 void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
@@ -123,6 +124,10 @@ void ports_update() {
         out.led_eingekuppelt1 = in.schalter_trommel1;
 }
 
+void usage(const char* cmd) {
+        printf("Usage: %s\n", cmd);
+}
+
 void cmd_handler() {
         static char line[64];
         static int size = -1;
@@ -145,10 +150,8 @@ void cmd_handler() {
 }
 
 void cmd_in(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: in\n");
-                return;
-        }
+        if (argc != 1)
+                return usage("in");
 
         printf("Inputs:\n"
 #define INPUT(name, port, bit)        #name" = %d\n"
@@ -161,10 +164,8 @@ void cmd_in(int argc, char* argv[]) {
 }
 
 void cmd_out(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: out\n");
-                return;
-        }
+        if (argc != 1)
+                return usage("out");
 
         printf("Outputs:\n"
 #define OUTPUT(name, port, bit)        #name" = %d\n"
@@ -177,10 +178,8 @@ void cmd_out(int argc, char* argv[]) {
 }
 
 void cmd_on(int argc, char* argv[]) {
-        if (argc != 2) {
-                printf("Usage: on <port>\n");
-                return;
-        }
+        if (argc != 2)
+                return usage("on <port>");
 
         if (!ports_manual) {
                 printf("Enable manual mode first!\n");
@@ -193,10 +192,8 @@ void cmd_on(int argc, char* argv[]) {
 }
 
 void cmd_off(int argc, char* argv[]) {
-        if (argc != 2) {
-                printf("Usage: off <port>\n");
-                return;
-        }
+        if (argc != 2)
+                return usage("off <port>");
 
         if (!ports_manual) {
                 printf("Enable manual mode first!\n");
@@ -214,18 +211,15 @@ void cmd_mode(int argc, char* argv[]) {
         } else if (argc == 2 && !strcmp(argv[1], "auto")) {
                 ports_manual = 0;
         } else if (argc != 1) {
-                printf("Usage: mode [manual|auto]\n");
-                return;
+                return usage("mode [manual|auto]");
         }
 
         printf("Mode: %s\n", ports_manual ? "manual" : "auto");
 }
 
 void cmd_help(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: help\n");
-                return;
-        }
+        if (argc != 1)
+                return usage("help");
 
         printf("List of available commands:\n");
         for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
@@ -234,10 +228,8 @@ void cmd_help(int argc, char* argv[]) {
 }
 
 void cmd_version(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: version\n");
-                return;
-        }
+        if (argc != 1)
+                return usage("version");
 
         printf("Steuersoftware Winde Version " VERSION "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
