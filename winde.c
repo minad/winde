@@ -40,7 +40,7 @@ int  uart_putchar(char c, FILE* fp);
 int  uart_getc();
 
 void prompt();
-void usage(const char*);
+void usage(const char*, ...);
 void cmd_handler();
 void cmd_exec(char*);
 void cmd_in(int argc, char* argv[]);
@@ -128,8 +128,15 @@ void prompt() {
         printf("%c> ", ports_manual ? 'm' : 'a');
 }
 
-void usage(const char* cmd) {
-        printf("Usage: %s\n", cmd);
+void usage(const char* fmt, ...) {
+        printf("Usage: ");
+
+        va_list ap;
+        va_start(ap, fmt);
+        vprintf(fmt, ap);
+        va_end(ap);
+
+        putchar('\n');
 }
 
 void cmd_exec(char* line) {
@@ -174,7 +181,7 @@ void cmd_handler() {
 
 void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
-                return usage("in");
+                return usage(argv[0]);
 
         printf("Inputs:\n"
 #define INPUT(name, port, bit)        #name" = %d\n"
@@ -188,7 +195,7 @@ void cmd_in(int argc, char* argv[]) {
 
 void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
-                return usage("out");
+                return usage(argv[0]);
 
         printf("Outputs:\n"
 #define OUTPUT(name, port, bit)        #name" = %d\n"
@@ -202,7 +209,7 @@ void cmd_out(int argc, char* argv[]) {
 
 void cmd_on(int argc, char* argv[]) {
         if (argc != 2)
-                return usage("on <port>");
+                return usage("%s <port>", argv[0]);
 
         if (!ports_manual) {
                 printf("Enable manual mode first!\n");
@@ -216,7 +223,7 @@ void cmd_on(int argc, char* argv[]) {
 
 void cmd_off(int argc, char* argv[]) {
         if (argc != 2)
-                return usage("off <port>");
+                return usage("%s <port>", argv[0]);
 
         if (!ports_manual) {
                 printf("Enable manual mode first!\n");
@@ -234,12 +241,12 @@ void cmd_mode(int argc, char* argv[]) {
         else if (argc == 2 && !strcmp(argv[1], "a"))
                 ports_manual = 0;
         else if (argc != 1)
-                usage("mode [m|a]");
+                usage("%s [m|a]", argv[0]);
 }
 
 void cmd_help(int argc, char* argv[]) {
         if (argc != 1)
-                return usage("help");
+                return usage(argv[0]);
 
         printf("List of available commands:\n");
         for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
@@ -249,7 +256,7 @@ void cmd_help(int argc, char* argv[]) {
 
 void cmd_version(int argc, char* argv[]) {
         if (argc != 1)
-                return usage("version");
+                return usage(argv[0]);
 
         printf("Steuersoftware Winde Version " VERSION "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
