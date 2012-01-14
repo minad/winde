@@ -182,7 +182,6 @@ void cmd_handler() {
 void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-
         printf("Inputs:\n"
 #define INPUT(name, port, bit)        #name" = %d\n"
 #define INPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
@@ -196,7 +195,6 @@ void cmd_in(int argc, char* argv[]) {
 void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-
         printf("Outputs:\n"
 #define OUTPUT(name, port, bit)        #name" = %d\n"
 #define OUTPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
@@ -210,7 +208,6 @@ void cmd_out(int argc, char* argv[]) {
 void cmd_on(int argc, char* argv[]) {
         if (argc != 2)
                 return usage("%s <port>", argv[0]);
-
         if (!ports_manual) {
                 printf("Enable manual mode first!\n");
                 return;
@@ -224,7 +221,6 @@ void cmd_on(int argc, char* argv[]) {
 void cmd_off(int argc, char* argv[]) {
         if (argc != 2)
                 return usage("%s <port>", argv[0]);
-
         if (!ports_manual) {
                 printf("Enable manual mode first!\n");
                 return;
@@ -247,7 +243,6 @@ void cmd_mode(int argc, char* argv[]) {
 void cmd_help(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-
         printf("List of available commands:\n");
         for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
                 printf("%s\n", cmd->name);
@@ -257,7 +252,6 @@ void cmd_help(int argc, char* argv[]) {
 void cmd_version(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-
         printf("Steuersoftware Winde Version " VERSION "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
