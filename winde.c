@@ -153,7 +153,7 @@ void cmd_exec(char* line) {
                                 return;
                         }
                 }
-                printf("Command not found %s\n", argv[0]);
+                printf("Command not found: %s\n", argv[0]);
         }
 }
 
