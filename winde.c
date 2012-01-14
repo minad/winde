@@ -316,9 +316,7 @@ void uart_init(uint32_t baud) {
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        while (ringbuf_full(uart_tx_ringbuf)) {
-                // wait
-        }
+        while (ringbuf_full(uart_tx_ringbuf)) {} // wait
         ringbuf_putc(uart_tx_ringbuf, c);
         UCSR0B |= (1 << UDRIE);
         return 0;
