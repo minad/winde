@@ -48,8 +48,7 @@ void cmd_out(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 void cmd_on(int argc, char* argv[]);
 void cmd_off(int argc, char* argv[]);
-void cmd_manual(int argc, char* argv[]);
-void cmd_auto(int argc, char* argv[]);
+void cmd_mode(int argc, char* argv[]);
 
 ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
 char       uart_rx_buf[32], uart_tx_buf[32];
@@ -61,8 +60,7 @@ cmd_t cmd_list[] = {
         { "out",     cmd_out     },
         { "on",      cmd_on      },
         { "off",     cmd_off     },
-        { "manual",  cmd_manual  },
-        { "auto",    cmd_auto    },
+        { "mode"  ,  cmd_mode    },
         { "help",    cmd_help    },
         { "version", cmd_version },
         { 0,         0           },
@@ -233,24 +231,17 @@ void cmd_off(int argc, char* argv[]) {
 #include "ports.h"
 }
 
-void cmd_manual(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: manual\n");
+void cmd_mode(int argc, char* argv[]) {
+        if (argc == 2 && !strcmp(argv[1], "manual")) {
+                ports_manual = 1;
+        } else if (argc == 2 && !strcmp(argv[1], "auto")) {
+                ports_manual = 0;
+        } else if (argc != 1) {
+                printf("Usage: mode [manual|auto]\n");
                 return;
         }
 
-        ports_manual = 1;
-        printf("Manual mode enabled\n");
-}
-
-void cmd_auto(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: auto\n");
-                return;
-        }
-
-        ports_manual = 0;
-        printf("Automatic mode enabled\n");
+        printf("Mode: %s\n", ports_manual ? "manual" : "auto");
 }
 
 void cmd_exec(char* line) {
