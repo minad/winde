@@ -46,8 +46,7 @@ void cmd_handler();
 void cmd_exec(char*);
 void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
-void cmd_on(int argc, char* argv[]);
-void cmd_off(int argc, char* argv[]);
+void cmd_on_off(int argc, char* argv[]);
 void cmd_mode(int argc, char* argv[]);
 void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
@@ -60,8 +59,8 @@ FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
 cmd_t cmd_list[] = {
         { "in",      cmd_in      },
         { "out",     cmd_out     },
-        { "on",      cmd_on      },
-        { "off",     cmd_off     },
+        { "on",      cmd_on_off  },
+        { "off",     cmd_on_off  },
         { "mode"  ,  cmd_mode    },
         { "help",    cmd_help    },
         { "version", cmd_version },
@@ -205,29 +204,16 @@ void cmd_out(int argc, char* argv[]) {
                '\n');
 }
 
-void cmd_on(int argc, char* argv[]) {
+void cmd_on_off(int argc, char* argv[]) {
         if (argc != 2)
                 return usage("%s <port>", argv[0]);
         if (!ports_manual) {
                 printf("Enable manual mode first!\n");
                 return;
         }
-
-#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 1; return; }
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #name)) { out.name = 1; return; }
-#include "ports.h"
-}
-
-void cmd_off(int argc, char* argv[]) {
-        if (argc != 2)
-                return usage("%s <port>", argv[0]);
-        if (!ports_manual) {
-                printf("Enable manual mode first!\n");
-                return;
-        }
-
-#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 0; return; }
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = 0; return; }
+        int on = strcmp(argv[0], "on") ? 0 : 1;
+#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = on; return; }
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = on; return; }
 #include "ports.h"
 }
 
