@@ -39,6 +39,7 @@ void uart_init(uint32_t baud);
 int  uart_putchar(char c, FILE* fp);
 int  uart_getc();
 
+void prompt();
 void usage(const char*);
 void cmd_handler();
 void cmd_exec(char*);
@@ -123,6 +124,10 @@ void ports_update() {
         out.led_eingekuppelt1 = in.schalter_trommel1;
 }
 
+void prompt() {
+        printf("%c> ", ports_manual ? 'm' : 'a');
+}
+
 void usage(const char* cmd) {
         printf("Usage: %s\n", cmd);
 }
@@ -150,7 +155,7 @@ void cmd_handler() {
         static char line[64];
         static int size = -1;
         if (size < 0) {
-                printf("> ");
+                prompt();
                 size = 0;
         }
         int c = uart_getc();
@@ -224,15 +229,12 @@ void cmd_off(int argc, char* argv[]) {
 }
 
 void cmd_mode(int argc, char* argv[]) {
-        if (argc == 2 && !strcmp(argv[1], "manual")) {
+        if (argc == 2 && !strcmp(argv[1], "m"))
                 ports_manual = 1;
-        } else if (argc == 2 && !strcmp(argv[1], "auto")) {
+        else if (argc == 2 && !strcmp(argv[1], "a"))
                 ports_manual = 0;
-        } else if (argc != 1) {
-                return usage("mode [manual|auto]");
-        }
-
-        printf("Mode: %s\n", ports_manual ? "manual" : "auto");
+        else if (argc != 1)
+                usage("mode [m|a]");
 }
 
 void cmd_help(int argc, char* argv[]) {
