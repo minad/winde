@@ -209,8 +209,8 @@ void cmd_on(int argc, char* argv[]) {
                 return;
         }
 
-#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 1; }
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #name)) { out.name = 1; }
+#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 1; return; }
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #name)) { out.name = 1; return; }
 #include "ports.h"
 }
 
@@ -223,8 +223,8 @@ void cmd_off(int argc, char* argv[]) {
                 return;
         }
 
-#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 0; }
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = 0; }
+#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 0; return; }
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = 0; return; }
 #include "ports.h"
 }
 
