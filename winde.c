@@ -25,6 +25,7 @@ typedef struct {
 
 void system_init();
 void ports_init();
+void ports_reset();
 void ports_read();
 void ports_write();
 void ports_update();
@@ -48,6 +49,7 @@ void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
 void cmd_on_off(int argc, char* argv[]);
 void cmd_mode(int argc, char* argv[]);
+void cmd_reset(int argc, char* argv[]);
 void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
@@ -61,7 +63,8 @@ cmd_t cmd_list[] = {
         { "out",     cmd_out     },
         { "on",      cmd_on_off  },
         { "off",     cmd_on_off  },
-        { "mode"  ,  cmd_mode    },
+        { "mode",    cmd_mode    },
+        { "reset",   cmd_reset    },
         { "help",    cmd_help    },
         { "version", cmd_version },
         { 0,         0           },
@@ -103,7 +106,14 @@ void system_init() {
 }
 
 void ports_init() {
-#define OUTPUT(name, port, bit) DDR ## port |= (1 << bit); out.name = 0;
+        ports_reset();
+
+#define OUTPUT(name, port, bit) DDR ## port |= (1 << bit);
+#include "ports.h"
+}
+
+void ports_reset() {
+#define OUTPUT(name, port, bit) out.name = 0;
 #include "ports.h"
 }
 
@@ -224,6 +234,12 @@ void cmd_mode(int argc, char* argv[]) {
                 ports_manual = 0;
         else if (argc != 1)
                 usage("%s [m|a]", argv[0]);
+}
+
+void cmd_reset(int argc, char* argv[]) {
+        if (argc != 1)
+                return usage(argv[0]);
+        ports_reset();
 }
 
 void cmd_help(int argc, char* argv[]) {
