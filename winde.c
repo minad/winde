@@ -42,13 +42,13 @@ int  uart_putchar(char c, FILE* fp);
 int  uart_getc();
 
 void cmd_handler();
-void cmd_help(int argc, char* argv[]);
 void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
-void cmd_version(int argc, char* argv[]);
 void cmd_on(int argc, char* argv[]);
 void cmd_off(int argc, char* argv[]);
 void cmd_mode(int argc, char* argv[]);
+void cmd_help(int argc, char* argv[]);
+void cmd_version(int argc, char* argv[]);
 
 ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
 char       uart_rx_buf[32], uart_tx_buf[32];
@@ -176,29 +176,6 @@ void cmd_out(int argc, char* argv[]) {
                '\n');
 }
 
-void cmd_help(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: help\n");
-                return;
-        }
-
-        printf("List of available commands:\n");
-        for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
-                printf("%s\n", cmd->name);
-        putchar('\n');
-}
-
-void cmd_version(int argc, char* argv[]) {
-        if (argc != 1) {
-                printf("Usage: version\n");
-                return;
-        }
-
-        printf("Steuersoftware Winde Version " VERSION "\n"
-               "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
-               "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
-}
-
 void cmd_on(int argc, char* argv[]) {
         if (argc != 2) {
                 printf("Usage: on <port>\n");
@@ -242,6 +219,29 @@ void cmd_mode(int argc, char* argv[]) {
         }
 
         printf("Mode: %s\n", ports_manual ? "manual" : "auto");
+}
+
+void cmd_help(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: help\n");
+                return;
+        }
+
+        printf("List of available commands:\n");
+        for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
+                printf("%s\n", cmd->name);
+        putchar('\n');
+}
+
+void cmd_version(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: version\n");
+                return;
+        }
+
+        printf("Steuersoftware Winde Version " VERSION "\n"
+               "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
+               "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
 }
 
 void cmd_exec(char* line) {
