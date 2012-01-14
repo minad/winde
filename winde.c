@@ -9,6 +9,7 @@
 
 #define VERSION        "0.1"
 #define UART_BAUD_RATE 9600
+#define MAX_ARGS       4
 
 typedef struct {
         int8_t read;
@@ -140,7 +141,6 @@ void usage(const char* fmt, ...) {
 }
 
 void cmd_exec(char* line) {
-        const int MAX_ARGS = 10;
         char *argv[MAX_ARGS];
         int argc;
         for (argc = 0; argc < MAX_ARGS; ++argc) {
