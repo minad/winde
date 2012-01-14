@@ -44,7 +44,12 @@ int  uart_getc();
 void cmd_handler();
 void cmd_help(int argc, char* argv[]);
 void cmd_in(int argc, char* argv[]);
+void cmd_out(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
+void cmd_on(int argc, char* argv[]);
+void cmd_off(int argc, char* argv[]);
+void cmd_manual(int argc, char* argv[]);
+void cmd_auto(int argc, char* argv[]);
 
 ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
 char       uart_rx_buf[32], uart_tx_buf[32];
@@ -53,6 +58,11 @@ FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
 
 cmd_t cmd_list[] = {
         { "in",      cmd_in      },
+        { "out",     cmd_out     },
+        { "on",      cmd_on      },
+        { "off",     cmd_off     },
+        { "manual",  cmd_manual  },
+        { "auto",    cmd_auto    },
         { "help",    cmd_help    },
         { "version", cmd_version },
         { 0,         0           },
@@ -69,6 +79,8 @@ struct {
 #define OUTPUT_WITH_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
 #include "ports.h"
 } out;
+
+int ports_manual = 0;
 
 int main() {
         system_init();
@@ -107,6 +119,9 @@ void ports_write() {
 }
 
 void ports_update() {
+        if (ports_manual)
+                return;
+
         out.led_eingekuppelt1 = in.schalter_trommel1;
 }
 
@@ -132,6 +147,11 @@ void cmd_handler() {
 }
 
 void cmd_in(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: in\n");
+                return;
+        }
+
         printf("Inputs:\n"
 #define INPUT(name, port, bit)        #name" = %d\n"
 #define INPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
@@ -142,7 +162,28 @@ void cmd_in(int argc, char* argv[]) {
                '\n');
 }
 
+void cmd_out(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: out\n");
+                return;
+        }
+
+        printf("Outputs:\n"
+#define OUTPUT(name, port, bit)        #name" = %d\n"
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
+#include "ports.h"
+               "%c",
+#define OUTPUT(name, port, bit) out.name,
+#include "ports.h"
+               '\n');
+}
+
 void cmd_help(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: help\n");
+                return;
+        }
+
         printf("List of available commands:\n");
         for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
                 printf("%s\n", cmd->name);
@@ -150,9 +191,66 @@ void cmd_help(int argc, char* argv[]) {
 }
 
 void cmd_version(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: version\n");
+                return;
+        }
+
         printf("Steuersoftware Winde Version " VERSION "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
+}
+
+void cmd_on(int argc, char* argv[]) {
+        if (argc != 2) {
+                printf("Usage: on <port>\n");
+                return;
+        }
+
+        if (!ports_manual) {
+                printf("Enable manual mode first!\n");
+                return;
+        }
+
+#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 1; }
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #name)) { out.name = 1; }
+#include "ports.h"
+}
+
+void cmd_off(int argc, char* argv[]) {
+        if (argc != 2) {
+                printf("Usage: off <port>\n");
+                return;
+        }
+
+        if (!ports_manual) {
+                printf("Enable manual mode first!\n");
+                return;
+        }
+
+#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 0; }
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #name)) { out.name = 0; }
+#include "ports.h"
+}
+
+void cmd_manual(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: manual\n");
+                return;
+        }
+
+        ports_manual = 1;
+        printf("Manual mode enabled\n");
+}
+
+void cmd_auto(int argc, char* argv[]) {
+        if (argc != 1) {
+                printf("Usage: auto\n");
+                return;
+        }
+
+        ports_manual = 0;
+        printf("Automatic mode enabled\n");
 }
 
 void cmd_exec(char* line) {
