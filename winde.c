@@ -64,7 +64,7 @@ cmd_t cmd_list[] = {
         { "on",      cmd_on_off  },
         { "off",     cmd_on_off  },
         { "mode",    cmd_mode    },
-        { "reset",   cmd_reset    },
+        { "reset",   cmd_reset   },
         { "help",    cmd_help    },
         { "version", cmd_version },
         { 0,         0           },
