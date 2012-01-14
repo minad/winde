@@ -68,13 +68,13 @@ cmd_t cmd_list[] = {
 };
 
 struct {
-#define INPUT(name, port, bit) int name : 1;
+#define INPUT(name, port, bit)                   int name : 1;
 #define INPUT_WITH_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
 #include "ports.h"
 } in;
 
 struct {
-#define OUTPUT(name, port, bit) int name : 1;
+#define OUTPUT(name, port, bit)                   int name : 1;
 #define OUTPUT_WITH_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
 #include "ports.h"
 } out;
@@ -195,7 +195,7 @@ void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
         printf("Outputs:\n"
-#define OUTPUT(name, port, bit)        #name" = %d\n"
+#define OUTPUT(name, port, bit)                   #name" = %d\n"
 #define OUTPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
 #include "ports.h"
                "%c",
@@ -212,7 +212,7 @@ void cmd_on_off(int argc, char* argv[]) {
                 return;
         }
         int on = strcmp(argv[0], "on") ? 0 : 1;
-#define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = on; return; }
+#define OUTPUT(name, port, bit)                   if (!strcmp(argv[1], #name)) { out.name = on; return; }
 #define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = on; return; }
 #include "ports.h"
 }
