@@ -79,7 +79,7 @@ struct {
 #include "ports.h"
 } out;
 
-int ports_manual = 0;
+char ports_manual = 0;
 
 int main() {
         system_init();
