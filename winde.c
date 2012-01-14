@@ -11,10 +11,10 @@
 #define UART_BAUD_RATE 9600
 
 typedef struct {
-	size_t read;
-        size_t write;
-	size_t size;
-	char buf[0];
+        int8_t read;
+        int8_t write;
+        int8_t size;
+        char   buf[0];
 } ringbuf_t;
 
 typedef struct {
@@ -28,7 +28,7 @@ void ports_read();
 void ports_write();
 void ports_update();
 
-ringbuf_t* ringbuf_init(void* buf, size_t size);
+ringbuf_t* ringbuf_init(void* buf, int8_t size);
 void       ringbuf_reset(ringbuf_t* rb);
 int        ringbuf_full(ringbuf_t* rb);
 int        ringbuf_empty(ringbuf_t* rb);
@@ -256,7 +256,7 @@ void cmd_version(int argc, char* argv[]) {
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
 }
 
-ringbuf_t* ringbuf_init(void* buf, size_t size) {
+ringbuf_t* ringbuf_init(void* buf, int8_t size) {
 	ringbuf_t *rb = (ringbuf_t*)buf;
 	rb->size = size - sizeof(ringbuf_t);
 	ringbuf_reset(rb);
