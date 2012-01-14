@@ -7,7 +7,7 @@
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 
-#define VERSION        "0"
+#define VERSION        "0.1"
 #define UART_BAUD_RATE 9600
 
 typedef struct {
@@ -28,8 +28,6 @@ void ports_read();
 void ports_write();
 void ports_update();
 
-void cmd_exec(char*);
-
 ringbuf_t* ringbuf_init(void* buf, size_t size);
 void       ringbuf_reset(ringbuf_t* rb);
 int        ringbuf_full(ringbuf_t* rb);
@@ -43,6 +41,7 @@ int  uart_getc();
 
 void usage(const char*);
 void cmd_handler();
+void cmd_exec(char*);
 void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
 void cmd_on(int argc, char* argv[]);
@@ -128,6 +127,25 @@ void usage(const char* cmd) {
         printf("Usage: %s\n", cmd);
 }
 
+void cmd_exec(char* line) {
+        const int MAX_ARGS = 10;
+        char *argv[MAX_ARGS];
+        int argc;
+        for (argc = 0; argc < MAX_ARGS; ++argc) {
+                if (!(argv[argc] = strsep(&line, " \t")) || *argv[argc] == '\0')
+                        break;
+        }
+        if (argc > 0) {
+                for (cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
+                        if (!strcmp(cmd->name, argv[0])) {
+                                cmd->fn(argc, argv);
+                                return;
+                        }
+                }
+                printf("Command not found %s\n", argv[0]);
+        }
+}
+
 void cmd_handler() {
         static char line[64];
         static int size = -1;
@@ -201,7 +219,7 @@ void cmd_off(int argc, char* argv[]) {
         }
 
 #define OUTPUT(name, port, bit) if (!strcmp(argv[1], #name)) { out.name = 0; }
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #name)) { out.name = 0; }
+#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = 0; }
 #include "ports.h"
 }
 
@@ -234,25 +252,6 @@ void cmd_version(int argc, char* argv[]) {
         printf("Steuersoftware Winde Version " VERSION "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
-}
-
-void cmd_exec(char* line) {
-        const int MAX_ARGS = 10;
-        char *argv[MAX_ARGS];
-        int argc;
-        for (argc = 0; argc < MAX_ARGS; ++argc) {
-                if (!(argv[argc] = strsep(&line, " \t")) || *argv[argc] == '\0')
-                        break;
-        }
-        if (argc > 0) {
-                for (cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
-                        if (!strcmp(cmd->name, argv[0])) {
-                                cmd->fn(argc, argv);
-                                return;
-                        }
-                }
-                printf("Command not found %s\n", argv[0]);
-        }
 }
 
 ringbuf_t* ringbuf_init(void* buf, size_t size) {
