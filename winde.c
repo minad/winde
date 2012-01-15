@@ -28,7 +28,7 @@ void ports_init();
 void ports_reset();
 void ports_read();
 void ports_write();
-void ports_update();
+void state_machine();
 
 ringbuf_t* ringbuf_init(void* buf, int8_t size);
 void       ringbuf_reset(ringbuf_t* rb);
@@ -43,6 +43,7 @@ int  uart_getc();
 
 void prompt();
 void usage(const char*, ...);
+int  check_manual();
 void cmd_handler();
 void cmd_exec(char*);
 void cmd_in(int argc, char* argv[]);
@@ -71,18 +72,28 @@ cmd_t cmd_list[] = {
 };
 
 struct {
-#define INPUT(name, port, bit)                   int name : 1;
-#define INPUT_WITH_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
-#include "ports.h"
+#define IN(name, port, bit)              int name : 1;
+#define IN_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
+#include "config.h"
 } in;
 
 struct {
-#define OUTPUT(name, port, bit)                   int name : 1;
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
-#include "ports.h"
+#define OUT(name, port, bit)              int name : 1;
+#define OUT_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
+#include "config.h"
 } out;
 
-char ports_manual = 0;
+char manual = 0, state = 0;
+
+#define ACTION(name, code)     void action_##name() code
+#define EVENT(name, condition) int event_##name() { return (condition); }
+#include "config.h"
+
+enum {
+#define STATE(name) STATE_##name,
+#include "config.h"
+        __STATE_unused
+};
 
 int main() {
         system_init();
@@ -91,7 +102,7 @@ int main() {
                "\n--------------------\n");
         for (;;) {
                 ports_read();
-                ports_update();
+                state_machine();
                 ports_write();
                 cmd_handler();
         }
@@ -108,34 +119,38 @@ void system_init() {
 void ports_init() {
         ports_reset();
 
-#define OUTPUT(name, port, bit) DDR ## port |= (1 << bit);
-#include "ports.h"
+#define OUT(name, port, bit) DDR ## port |= (1 << bit);
+#include "config.h"
 }
 
 void ports_reset() {
-#define OUTPUT(name, port, bit) out.name = 0;
-#include "ports.h"
+#define OUT(name, port, bit) out.name = 0;
+#include "config.h"
 }
 
 void ports_read() {
-#define INPUT(name, port, bit) in.name = (PIN ## port >> bit) & 1;
-#include "ports.h"
+#define IN(name, port, bit) in.name = (PIN ## port >> bit) & 1;
+#include "config.h"
 }
 
 void ports_write() {
-#define OUTPUT(name, port, bit) if (out.name) { PORT ## port |= (1 << bit); } else { PORT ## port &= ~(1 << bit); }
-#include "ports.h"
+#define OUT(name, port, bit) \
+        if (out.name) { PORT ## port |= (1 << bit); } \
+        else { PORT ## port &= ~(1 << bit); }
+#include "config.h"
 }
 
-void ports_update() {
-        if (ports_manual)
+void state_machine() {
+        if (manual)
                 return;
-
-        out.led_eingekuppelt1 = in.schalter_trommel1;
+#define TRANSITION(initial, ename, aname, final) \
+        if (state == STATE_##initial && event_##ename()) \
+        { action_##aname(); state = STATE_##final; return; }
+#include "config.h"
 }
 
 void prompt() {
-        printf("%c> ", ports_manual ? 'm' : 'a');
+        printf("%c> ", manual ? 'm' : 'a');
 }
 
 void usage(const char* fmt, ...) {
@@ -147,6 +162,12 @@ void usage(const char* fmt, ...) {
         va_end(ap);
 
         putchar('\n');
+}
+
+int check_manual() {
+        if (!manual)
+                printf("Enable manual mode first!\n");
+        return manual;
 }
 
 void cmd_exec(char* line) {
@@ -192,12 +213,12 @@ void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
         printf("Inputs:\n"
-#define INPUT(name, port, bit)        #name" = %d\n"
-#define INPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
-#include "ports.h"
+#define IN(name, port, bit)              #name" = %d\n"
+#define IN_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
+#include "config.h"
                "%c",
-#define INPUT(name, port, bit) in.name,
-#include "ports.h"
+#define IN(name, port, bit) in.name,
+#include "config.h"
                '\n');
 }
 
@@ -205,33 +226,33 @@ void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
         printf("Outputs:\n"
-#define OUTPUT(name, port, bit)                   #name" = %d\n"
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
-#include "ports.h"
+#define OUT(name, port, bit)              #name" = %d\n"
+#define OUT_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
+#include "config.h"
                "%c",
-#define OUTPUT(name, port, bit) out.name,
-#include "ports.h"
+#define OUT(name, port, bit) out.name,
+#include "config.h"
                '\n');
 }
 
 void cmd_on_off(int argc, char* argv[]) {
         if (argc != 2)
                 return usage("%s <port>", argv[0]);
-        if (!ports_manual) {
-                printf("Enable manual mode first!\n");
-                return;
+        if (check_manual()) {
+                int on = strcmp(argv[0], "on") ? 0 : 1;
+#define OUT(name, port, bit) \
+                if (!strcmp(argv[1], #name)) { out.name = on; return; }
+#define OUT_ALIAS(name, port, bit, alias) \
+                if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = on; return; }
+#include "config.h"
         }
-        int on = strcmp(argv[0], "on") ? 0 : 1;
-#define OUTPUT(name, port, bit)                   if (!strcmp(argv[1], #name)) { out.name = on; return; }
-#define OUTPUT_WITH_ALIAS(name, port, bit, alias) if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = on; return; }
-#include "ports.h"
 }
 
 void cmd_mode(int argc, char* argv[]) {
         if (argc == 2 && !strcmp(argv[1], "m"))
-                ports_manual = 1;
+                manual = 1;
         else if (argc == 2 && !strcmp(argv[1], "a"))
-                ports_manual = 0;
+                manual = 0;
         else if (argc != 1)
                 usage("%s [m|a]", argv[0]);
 }
@@ -239,7 +260,10 @@ void cmd_mode(int argc, char* argv[]) {
 void cmd_reset(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-        ports_reset();
+        if (check_manual()) {
+                state = 0;
+                ports_reset();
+        }
 }
 
 void cmd_help(int argc, char* argv[]) {

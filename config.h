@@ -1,38 +1,35 @@
-// Output port configuration
-//  (Name,             Port, Bit,  Logical Name (Optional))
-OUT (led1,             A,    7,    led_eingekuppelt1)
-OUT (led2,             A,    6,    led_eingekuppelt2)
-OUT (led3,             A,    5,    led_handbremse)
-OUT (led4,             A,    4,    led_kappvorrichtung)
-OUT (led5,             A,    3,    led_temperatur)
-OUT (led6,             A,    2,    led_power)
-OUT (led7,             A,    1)
-OUT (led8,             A,    0)
-OUT (buzzer,           F,    2)
-OUT (latch_disable,    B,    6)
-OUT (zuendung_an,      C,    0)
-OUT (zuendungsbruecke, C,    1)
-OUT (system1,          C,    2)
-OUT (system2,          C,    3)
-OUT (system3,          C,    4)
-OUT (system4,          C,    5,    gassperre)
-OUT (system5,          C,    6,    trommelbremse)
-OUT (system6,          C,    7,    auszugsbremse)
+#ifndef OUT_ALIAS
+#  define OUT_ALIAS(name, port, bit, alias) OUT(name, port, bit)
+#endif
+#ifndef OUT
+#  define OUT(name, port, bit)
+#endif
+#ifndef IN_ALIAS
+#  define IN_ALIAS(name, port, bit, alias) IN(name, port, bit)
+#endif
+#ifndef IN
+#  define IN(name, port, bit)
+#endif
+#ifndef STATE
+#  define STATE(name)
+#endif
+#ifndef ACTION
+#  define ACTION(name, code)
+#endif
+#ifndef EVENT
+#  define EVENT(name, condition)
+#endif
+#ifndef TRANSITION
+#  define TRANSITION(initial, event, action, final)
+#endif
 
-// Input port configuration
-// (Name,              Port, Bit,  Logical Name (Optional))
-IN (schalter1,         E,    2,    schalter_trommel1)
-IN (schalter2,         E,    3,    schalter_trommel2)
-IN (schalter3,         E,    4,    schalter_bremse_auf)
-IN (schalter4,         E,    5)
-IN (schalter5,         E,    6,    schalter_auskuppeln)
-IN (schalter6,         B,    5)
-IN (system1,           D,    7,    bremse_getreten)
-IN (system2,           D,    6,    gangwarnung)
-IN (system3,           D,    5,    drehzahl1)
-IN (system4,           D,    4,    drehzahl2)
-IN (system5,           D,    3,    temperatur_motor)
-IN (system6,           D,    2,    temperatur_wandler)
-IN (system7,           D,    1)
-IN (system8,           D,    0,    handbremse)
-IN (system9,           B,    7)
+#include "config"
+
+#undef OUT
+#undef IN
+#undef OUT_ALIAS
+#undef IN_ALIAS
+#undef STATE
+#undef ACTION
+#undef EVENT
+#undef TRANSITION
