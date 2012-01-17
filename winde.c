@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/atomic.h>
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
