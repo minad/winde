@@ -155,7 +155,7 @@ void state_machine() {
 }
 
 void prompt() {
-        printf("%c> ", manual ? 'm' : 'a');
+        printf(manual ? "manual> " : "> ");
 }
 
 void usage() {
