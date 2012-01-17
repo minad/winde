@@ -1,4 +1,4 @@
-// Output port configuration
+// Konfiguration der Ausgänge
 //        (Name,             Port, Bit,  Alias)
 OUT_ALIAS (led1,             A,    7,    led_eingekuppelt1)
 OUT_ALIAS (led2,             A,    6,    led_eingekuppelt2)
@@ -19,7 +19,7 @@ OUT_ALIAS (system4,          C,    5,    gassperre)
 OUT_ALIAS (system5,          C,    6,    trommelbremse)
 OUT_ALIAS (system6,          C,    7,    auszugsbremse)
 
-// Input port configuration
+// Konfiguration der Eingänge
 //       (Name,              Port, Bit,  Alias)
 IN_ALIAS (schalter1,         E,    2,    schalter_trommel1)
 IN_ALIAS (schalter2,         E,    3,    schalter_trommel2)
@@ -37,11 +37,19 @@ IN       (system7,           D,    1)
 IN_ALIAS (system8,           D,    0,    handbremse)
 IN       (system9,           B,    7)
 
+// Zustände des Automaten
+//    (Zustandsname)
 STATE (initial)
 STATE (final)
 
+// Ereignisse, die Zustandsübergänge auslösen
+//    (Ereignisname,       Boolescher Ausdruck)
 EVENT (schalter_gedrueckt, in.schalter1)
 
-ACTION (einkuppeln, {out.led_eingekuppelt1 = 1;})
+// Aktionen beim Übergang zwischen Zuständen
+//     (Aktionsname, Code-Block)
+ACTION (einkuppeln,  {out.led_eingekuppelt1 = 1;})
 
-TRANSITION (initial, schalter_gedrueckt, einkuppeln, final)
+// Übergänge zwischen Zuständen
+//         (Anfangszustand, Ereignis,           Aktion,     Endzustand)
+TRANSITION (initial,        schalter_gedrueckt, einkuppeln, final)
