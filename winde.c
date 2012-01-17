@@ -7,9 +7,13 @@
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 
-#define VERSION        "0.1"
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+#define VERSION        0.1
 #define UART_BAUD_RATE 9600
 #define MAX_ARGS       4
+#define TABLE_FORMAT   "%-20s | %-24s | %-4s | %s\n"
 
 typedef struct {
         int8_t read;
@@ -212,27 +216,25 @@ void cmd_handler() {
 void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-        printf("Inputs:\n"
-#define IN(name, port, bit)              #name" = %d\n"
-#define IN_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
+        printf("Inputs:\n");
+        printf(TABLE_FORMAT, "Name", "Alias", "Port", "Active");
+#define IN(name, port, bit) \
+        printf(TABLE_FORMAT, #name, "", #port#bit, in.name ? "X" : "");
+#define IN_ALIAS(name, port, bit, alias) \
+        printf(TABLE_FORMAT, #name, #alias, #port#bit, in.name ? "X" : "");
 #include "config.h"
-               "%c",
-#define IN(name, port, bit) in.name,
-#include "config.h"
-               '\n');
 }
 
 void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-        printf("Outputs:\n"
-#define OUT(name, port, bit)              #name" = %d\n"
-#define OUT_ALIAS(name, port, bit, alias) #name" ("#alias") = %d\n"
+        printf("Outputs:\n");
+        printf(TABLE_FORMAT, "Name", "Alias", "Port", "Active");
+#define OUT(name, port, bit) \
+        printf(TABLE_FORMAT, #name, "", #port#bit, out.name ? "X" : "");
+#define OUT_ALIAS(name, port, bit, alias) \
+        printf(TABLE_FORMAT, #name, #alias, #port#bit, out.name ? "X" : "");
 #include "config.h"
-               "%c",
-#define OUT(name, port, bit) out.name,
-#include "config.h"
-               '\n');
 }
 
 void cmd_on_off(int argc, char* argv[]) {
@@ -242,7 +244,7 @@ void cmd_on_off(int argc, char* argv[]) {
                 int on = strcmp(argv[0], "on") ? 0 : 1;
 #define OUT(name, port, bit) \
                 if (!strcmp(argv[1], #name)) { out.name = on; return; }
-#define OUT_ALIAS(name, port, bit, alias) \
+#define OUT_ALIAS(name, port, bit, alias)                               \
                 if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = on; return; }
 #include "config.h"
         }
@@ -278,7 +280,7 @@ void cmd_help(int argc, char* argv[]) {
 void cmd_version(int argc, char* argv[]) {
         if (argc != 1)
                 return usage(argv[0]);
-        printf("Steuersoftware Winde Version " VERSION "\n"
+        printf("Steuersoftware Winde Version " STR(VERSION) "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
 }
