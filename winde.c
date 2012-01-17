@@ -51,6 +51,7 @@ void usage();
 int  check_manual();
 void cmd_handler();
 void cmd_exec(char*);
+const cmd_t* cmd_find(const char*);
 void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
 void cmd_on_off(int argc, char* argv[]);
@@ -176,16 +177,22 @@ void cmd_exec(char* line) {
                         break;
         }
         if (argc > 0) {
-                for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
-                        if (!strcmp(cmd->name, argv[0])) {
-                                current_cmd = cmd;
-                                cmd->fn(argc, argv);
-                                current_cmd = 0;
-                                return;
-                        }
+                const cmd_t* cmd = cmd_find(argv[0]);
+                if (cmd) {
+                        current_cmd = cmd;
+                        cmd->fn(argc, argv);
+                        current_cmd = 0;
                 }
-                printf("Command not found: %s\n", argv[0]);
         }
+}
+
+const cmd_t* cmd_find(const char* name) {
+        for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
+                if (!strcmp(cmd->name, name))
+                        return cmd;
+        }
+        printf("Command not found: %s\n", name);
+        return 0;
 }
 
 void cmd_handler() {
@@ -273,13 +280,9 @@ void cmd_help(int argc, char* argv[]) {
                         printf("  %20s %s\n", cmd->name, cmd->help);
                 putchar('\n');
         } else if (argc == 2) {
-                for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
-                        if (!strcmp(cmd->name, argv[1])) {
-                                printf("Usage: %s %s\n%s\n", cmd->name, cmd->usage, cmd->help);
-                                return;
-                        }
-                }
-                printf("Command not found: %s\n", argv[0]);
+                const cmd_t* cmd = cmd_find(argv[1]);
+                if (cmd)
+                        printf("Usage: %s %s\n%s\n", cmd->name, cmd->usage, cmd->help);
         } else {
                 usage();
         }
