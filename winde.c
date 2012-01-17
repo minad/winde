@@ -75,8 +75,7 @@ const cmd_t cmd_list[] = {
         { "help",    "[cmd]",  cmd_help,    "Print this help"            },
         { "version", 0,        cmd_version, "Print version"              },
         { 0,                                                             },
-};
-const cmd_t* current_cmd = 0;
+}, *current_cmd = 0;
 
 struct {
 #define IN(name, port, bit)              int name : 1;
