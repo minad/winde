@@ -22,9 +22,11 @@ typedef struct {
         char   buf[0];
 } ringbuf_t;
 
-typedef struct {
+typedef struct cmd_s {
         char* name;
-        void (*fn)(int, char*[]);
+        char* args;
+        void (*fn)(const struct cmd_s*, int, char*[]);
+        char* help;
 } cmd_t;
 
 void system_init();
@@ -46,33 +48,33 @@ int  uart_putchar(char c, FILE* fp);
 int  uart_getc();
 
 void prompt();
-void usage(const char*, ...);
+void usage(const cmd_t* cmd);
 int  check_manual();
 void cmd_handler();
 void cmd_exec(char*);
-void cmd_in(int argc, char* argv[]);
-void cmd_out(int argc, char* argv[]);
-void cmd_on_off(int argc, char* argv[]);
-void cmd_mode(int argc, char* argv[]);
-void cmd_reset(int argc, char* argv[]);
-void cmd_help(int argc, char* argv[]);
-void cmd_version(int argc, char* argv[]);
+void cmd_in(const cmd_t*, int argc, char* argv[]);
+void cmd_out(const cmd_t*, int argc, char* argv[]);
+void cmd_on_off(const cmd_t*, int argc, char* argv[]);
+void cmd_mode(const cmd_t*, int argc, char* argv[]);
+void cmd_reset(const cmd_t*, int argc, char* argv[]);
+void cmd_help(const cmd_t*, int argc, char* argv[]);
+void cmd_version(const cmd_t*, int argc, char* argv[]);
 
 ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
 char       uart_rx_buf[32], uart_tx_buf[32];
 
 FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
 
-cmd_t cmd_list[] = {
-        { "in",      cmd_in      },
-        { "out",     cmd_out     },
-        { "on",      cmd_on_off  },
-        { "off",     cmd_on_off  },
-        { "mode",    cmd_mode    },
-        { "reset",   cmd_reset   },
-        { "help",    cmd_help    },
-        { "version", cmd_version },
-        { 0,         0           },
+const cmd_t cmd_list[] = {
+        { "in",      0,        cmd_in,      "Print list of input ports"  },
+        { "out",     0,        cmd_out,     "Print list of output ports" },
+        { "on",      "<port>", cmd_on_off,  "Set port on"                },
+        { "off",     "<port>", cmd_on_off,  "Set port off"               },
+        { "mode",    "[a|m]",  cmd_mode,    "Set automatic/manual mode"  },
+        { "reset",   0,        cmd_reset,   "Reset system"               },
+        { "help",    0,        cmd_help,    "Print this help"            },
+        { "version", 0,        cmd_version, "Print version"              },
+        { 0,                                                             },
 };
 
 struct {
@@ -156,15 +158,8 @@ void prompt() {
         printf("%c> ", manual ? 'm' : 'a');
 }
 
-void usage(const char* fmt, ...) {
-        printf("Usage: ");
-
-        va_list ap;
-        va_start(ap, fmt);
-        vprintf(fmt, ap);
-        va_end(ap);
-
-        putchar('\n');
+void usage(const cmd_t* cmd) {
+        printf("Usage: %s %s\n", cmd->name, cmd->args ? cmd->args : "");
 }
 
 int check_manual() {
@@ -181,9 +176,9 @@ void cmd_exec(char* line) {
                         break;
         }
         if (argc > 0) {
-                for (cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
+                for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
                         if (!strcmp(cmd->name, argv[0])) {
-                                cmd->fn(argc, argv);
+                                cmd->fn(cmd, argc, argv);
                                 return;
                         }
                 }
@@ -212,9 +207,9 @@ void cmd_handler() {
         }
 }
 
-void cmd_in(int argc, char* argv[]) {
+void cmd_in(const cmd_t* cmd, int argc, char* argv[]) {
         if (argc != 1)
-                return usage(argv[0]);
+                return usage(cmd);
         printf("Inputs:\n");
         printf(TABLE_FORMAT, "Name", "Alias", "Port", "Active");
 #define IN(name, port, bit) \
@@ -224,9 +219,9 @@ void cmd_in(int argc, char* argv[]) {
 #include "config.h"
 }
 
-void cmd_out(int argc, char* argv[]) {
+void cmd_out(const cmd_t* cmd, int argc, char* argv[]) {
         if (argc != 1)
-                return usage(argv[0]);
+                return usage(cmd);
         printf("Outputs:\n");
         printf(TABLE_FORMAT, "Name", "Alias", "Port", "Active");
 #define OUT(name, port, bit) \
@@ -236,9 +231,9 @@ void cmd_out(int argc, char* argv[]) {
 #include "config.h"
 }
 
-void cmd_on_off(int argc, char* argv[]) {
+void cmd_on_off(const cmd_t* cmd, int argc, char* argv[]) {
         if (argc != 2)
-                return usage("%s <port>", argv[0]);
+                return usage(cmd);
         if (check_manual()) {
                 int on = strcmp(argv[0], "on") ? 0 : 1;
 #define OUT(name, port, bit) \
@@ -249,36 +244,36 @@ void cmd_on_off(int argc, char* argv[]) {
         }
 }
 
-void cmd_mode(int argc, char* argv[]) {
+void cmd_mode(const cmd_t* cmd, int argc, char* argv[]) {
         if (argc == 2 && !strcmp(argv[1], "m"))
                 manual = 1;
         else if (argc == 2 && !strcmp(argv[1], "a"))
                 manual = 0;
         else if (argc != 1)
-                usage("%s [m|a]", argv[0]);
+                usage(cmd);
 }
 
-void cmd_reset(int argc, char* argv[]) {
+void cmd_reset(const cmd_t* cmd, int argc, char* argv[]) {
         if (argc != 1)
-                return usage(argv[0]);
+                return usage(cmd);
         if (check_manual()) {
                 state = 0;
                 ports_reset();
         }
 }
 
-void cmd_help(int argc, char* argv[]) {
+void cmd_help(const cmd_t* cmd, int argc, char* argv[]) {
         if (argc != 1)
-                return usage(argv[0]);
+                return usage(cmd);
         printf("List of available commands:\n");
-        for (cmd_t* cmd = cmd_list; cmd->name; ++cmd)
+        for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd)
                 printf("%s\n", cmd->name);
         putchar('\n');
 }
 
-void cmd_version(int argc, char* argv[]) {
+void cmd_version(const cmd_t* cmd, int argc, char* argv[]) {
         if (argc != 1)
-                return usage(argv[0]);
+                return usage(cmd);
         printf("Steuersoftware Winde Version " STR(VERSION) "\n"
                "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
                "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
