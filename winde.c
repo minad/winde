@@ -92,14 +92,14 @@ struct {
 
 char manual = 0, state = 0;
 
-#define ACTION(name, code)     void action_##name() code
-#define EVENT(name, condition) int event_##name() { return (condition); }
-#include "config.h"
-
 enum {
 #define STATE(name) STATE_##name,
 #include "config.h"
 };
+
+#define ACTION(name, code)     void action_##name() code
+#define EVENT(name, condition) int event_##name() { return (condition); }
+#include "config.h"
 
 int main() {
         system_init();
