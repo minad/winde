@@ -72,11 +72,11 @@ const cmd_t cmd_list[] = {
         { "off",     "<port>", cmd_on_off,  "Set port off"               },
         { "mode",    "[a|m]",  cmd_mode,    "Set automatic/manual mode"  },
         { "reset",   0,        cmd_reset,   "Reset system"               },
-        { "help",    0,        cmd_help,    "Print this help"            },
+        { "help",    "[cmd]",  cmd_help,    "Print this help"            },
         { "version", 0,        cmd_version, "Print version"              },
         { 0,                                                             },
 };
-const cmd_t* current_cmd;
+const cmd_t* current_cmd = 0;
 
 struct {
 #define IN(name, port, bit)              int name : 1;
@@ -220,6 +220,7 @@ void cmd_in(int argc, char* argv[]) {
 #define IN_ALIAS(name, port, bit, alias) \
         printf(TABLE_FORMAT, #name, #alias, #port#bit, in.name ? "X" : "");
 #include "config.h"
+        putchar('\n');
 }
 
 void cmd_out(int argc, char* argv[]) {
@@ -232,6 +233,7 @@ void cmd_out(int argc, char* argv[]) {
 #define OUT_ALIAS(name, port, bit, alias) \
         printf(TABLE_FORMAT, #name, #alias, #port#bit, out.name ? "X" : "");
 #include "config.h"
+        putchar('\n');
 }
 
 void cmd_on_off(int argc, char* argv[]) {
@@ -266,12 +268,22 @@ void cmd_reset(int argc, char* argv[]) {
 }
 
 void cmd_help(int argc, char* argv[]) {
-        if (argc != 1)
-                return usage();
-        printf("List of available commands:\n");
-        for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd)
-                printf("%s\n", cmd->name);
-        putchar('\n');
+        if (argc == 1) {
+                printf("List of available commands:\n");
+                for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd)
+                        printf("  %20s %s\n", cmd->name, cmd->help);
+                putchar('\n');
+        } else if (argc == 2) {
+                for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
+                        if (!strcmp(cmd->name, argv[1])) {
+                                printf("Usage: %s %s\n%s\n", cmd->name, cmd->args, cmd->help);
+                                return;
+                        }
+                }
+                printf("Command not found: %s\n", argv[0]);
+        } else {
+                usage();
+        }
 }
 
 void cmd_version(int argc, char* argv[]) {
