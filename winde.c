@@ -6,10 +6,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-#define VERSION        0.1
 #define UART_BAUD_RATE 9600
 #define MAX_ARGS       4
 #define TABLE_FORMAT   "%-20s | %-24s | %-4s | %s\n"
@@ -49,6 +45,7 @@ int  uart_getc();
 void prompt();
 void usage();
 int  check_manual();
+void print_version();
 void cmd_handler();
 void cmd_exec(char*);
 const cmd_t* cmd_find(const char*);
@@ -102,9 +99,7 @@ enum {
 
 int main() {
         system_init();
-        printf("\n--------------------\n"
-               "Steuersoftware Winde"
-               "\n--------------------\n");
+        print_version();
         for (;;) {
                 ports_read();
                 update_state();
@@ -166,6 +161,15 @@ int check_manual() {
         if (!manual)
                 printf("Enable manual mode first!\n");
         return manual;
+}
+
+void print_version() {
+        printf("\nSteuersoftware der Winde AFK-3\n"
+               "  Version:       " VERSION "\n"
+               "  Git-Version:   " GIT_VERSION "\n"
+               "  Kompiliert am: " __DATE__ " " __TIME__ "\n"
+               "  Elektronik:    Christian 'Paule' Schreiber\n"
+               "  Software:      Daniel 'Teilchen' Mendler\n\n");
 }
 
 void cmd_exec(char* line) {
@@ -290,9 +294,7 @@ void cmd_help(int argc, char* argv[]) {
 void cmd_version(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
-        printf("Steuersoftware Winde Version " STR(VERSION) "\n"
-               "  Elektronikentwicklung: Christian 'Paule' Schreiber\n"
-               "  Softwareentwicklung:   Daniel 'Teilchen' Mendler\n\n");
+        print_version();
 }
 
 ringbuf_t* ringbuf_init(void* buf, int8_t size) {
