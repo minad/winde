@@ -23,7 +23,7 @@ typedef struct {
 
 typedef struct {
         char* name;
-        char* args;
+        char* usage;
         void (*fn)(int, char*[]);
         char* help;
 } cmd_t;
@@ -159,7 +159,7 @@ void prompt() {
 }
 
 void usage() {
-        printf("Usage: %s %s\n", current_cmd->name, current_cmd->args ? current_cmd->args : "");
+        printf("Usage: %s %s\n", current_cmd->name, current_cmd->usage ? current_cmd->usage : "");
 }
 
 int check_manual() {
@@ -275,7 +275,7 @@ void cmd_help(int argc, char* argv[]) {
         } else if (argc == 2) {
                 for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
                         if (!strcmp(cmd->name, argv[1])) {
-                                printf("Usage: %s %s\n%s\n", cmd->name, cmd->args, cmd->help);
+                                printf("Usage: %s %s\n%s\n", cmd->name, cmd->usage, cmd->help);
                                 return;
                         }
                 }
