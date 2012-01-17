@@ -33,7 +33,7 @@ void ports_init();
 void ports_reset();
 void ports_read();
 void ports_write();
-void state_machine();
+void update_state();
 
 ringbuf_t* ringbuf_init(void* buf, int8_t size);
 void       ringbuf_reset(ringbuf_t* rb);
@@ -107,7 +107,7 @@ int main() {
                "\n--------------------\n");
         for (;;) {
                 ports_read();
-                state_machine();
+                update_state();
                 ports_write();
                 cmd_handler();
         }
@@ -145,7 +145,7 @@ void ports_write() {
 #include "config.h"
 }
 
-void state_machine() {
+void update_state() {
         if (manual)
                 return;
 #define TRANSITION(initial, ename, aname, final) \
