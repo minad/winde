@@ -96,7 +96,6 @@ char manual = 0, state = 0;
 enum {
 #define STATE(name) STATE_##name,
 #include "config.h"
-        __STATE_unused
 };
 
 int main() {
