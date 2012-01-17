@@ -268,7 +268,7 @@ void cmd_reset(int argc, char* argv[]) {
 
 void cmd_help(int argc, char* argv[]) {
         if (argc == 1) {
-                printf("List of available commands:\n");
+                printf("List of commands:\n");
                 for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd)
                         printf("  %20s %s\n", cmd->name, cmd->help);
                 putchar('\n');
