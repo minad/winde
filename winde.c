@@ -86,7 +86,7 @@ struct {
 #include "config.h"
 } out;
 
-char manual = 0, state = 0;
+char manual = 1, state = 0;
 
 enum {
 #define STATE(name, action) STATE_##name,
