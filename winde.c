@@ -158,7 +158,9 @@ void state_update() {
         out.led_kappung = in.kappung_gespannt;
         out.led_temperatur = !temperatur_ok;
         out.led_power = 1;
-        out.buzzer = state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts); 
+        out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
+                     (state != STATE_bereit && in.schalter_auszugsbremse_auf) ||
+                     (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln); 
 
 #define TRANS_ACTION(initial, event, final, act) \
         if (state == STATE_##initial && event) { state_set(STATE_##final); action_##act(); return; }
