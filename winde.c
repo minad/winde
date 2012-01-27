@@ -89,7 +89,7 @@ struct {
 char manual = 0, state = 0;
 
 enum {
-#define STATE(name) STATE_##name,
+#define STATE(name, action) STATE_##name,
 #include "config.h"
 };
 
@@ -97,9 +97,11 @@ enum {
 #define EVENT(name, condition) int event_##name() { return (condition); }
 #include "config.h"
 
+#define STATE(name, act) void state_##name() { state = STATE_##name; action_##act(); }
+#include "config.h"
+
 int main() {
         system_init();
-        print_version();
         for (;;) {
                 ports_read();
                 update_state();
@@ -114,6 +116,9 @@ void system_init() {
         ports_init();
         uart_init(UART_BAUD_RATE);
         sei();
+
+        print_version();
+        state_start();
 }
 
 void ports_init() {
@@ -143,9 +148,9 @@ void ports_write() {
 void update_state() {
         if (manual)
                 return;
-#define TRANSITION(initial, ename, aname, final) \
-        if (state == STATE_##initial && event_##ename()) \
-        { action_##aname(); state = STATE_##final; return; }
+#define TRANSITION(initial, ev, final) \
+        if (state == STATE_##initial && event_##ev()) \
+                return state_##final();
 #include "config.h"
 }
 
@@ -271,8 +276,8 @@ void cmd_reset(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         if (check_manual()) {
-                state = 0;
                 ports_reset();
+                state_start();
         }
 }
 
