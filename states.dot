@@ -1,0 +1,12 @@
+digraph state_machine {
+	rankdir = LR;
+
+	node [shape = doublecircle]; start;
+	node [shape = circle ];
+
+#define STATE(name, action) name [ label = <<b>name</b><br/><br/>Aktion: action> ]
+#include "config.h"
+
+#define TRANSITION(initial, event, final) initial -> final [ label = event ];
+#include "config.h"
+}

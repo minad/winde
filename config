@@ -39,23 +39,24 @@ IN       (system9,           B,    7)
 
 // Zustände des Automaten
 //    (Zustandsname,        Eingangsaktion)
-STATE (start,               keine_aktion)
-STATE (bereit,              keine_aktion)
+STATE (start,               aktualisiere_leds)
+STATE (bereit,              aktualisiere_leds)
+STATE (motor_an,            aktualisiere_leds)
 STATE (links_eingekuppelt,  links_einkuppeln)
 STATE (rechts_eingekuppelt, rechts_einkuppeln)
-STATE (ende,                keine_aktion)
 
 // Ereignisse, die Zustandsübergänge auslösen
-//    (Ereignisname,               Boolescher Ausdruck)
-EVENT (alles_ok,                   in.kappvorrichtung_gespannt &&
-                                   in.bremse_getreten &&
-                                   in.handbremse_angezogen &&
-          			   !in.falscher_gang &&
-                                   !in.falsche_motor_temp &&
-                                   !in.falsche_wandler_temp)
-EVENT (nicht_alles_ok,             !event_alles_ok())
-EVENT (schalter_einkuppeln_links,  in.schalter_einkuppeln_links)
-EVENT (schalter_einkuppeln_rechts, in.schalter_einkuppeln_rechts)
+//    (Ereignisname,                Boolescher Ausdruck)
+EVENT (alles_ok,                    in.kappvorrichtung_gespannt &&
+                                    in.bremse_getreten &&
+                                    in.handbremse_angezogen &&
+          	   		    !in.falscher_gang &&
+                                    !in.falsche_motor_temp &&
+                                    !in.falsche_wandler_temp)
+EVENT (nicht_alles_ok,              !event_alles_ok())
+EVENT (einkuppeln_links_gedrueckt,  in.schalter_einkuppeln_links)
+EVENT (einkuppeln_rechts_gedrueckt, in.schalter_einkuppeln_rechts)
+EVENT (auskuppeln_gedrueckt,        in.schalter_auskuppeln)
 
 // Aktionen beim Betreten eines Zustands
 //     (Aktionsname,                Code-Block)
@@ -63,13 +64,14 @@ ACTION (keine_aktion,               {})
 ACTION (aktualisiere_kontroll_leds, {})
 ACTION (links_einkuppeln,           {})
 ACTION (rechts_einkuppeln,          {})
+ACTION (auskuppeln,                 {})
 
 // Übergänge zwischen Zuständen
-//         (Anfangszustand, Ereignis,                   Endzustand)
-TRANSITION (start,          alles_ok,                   bereit)
-TRANSITION (start,          nicht_alles_ok,             start)
-TRANSITION (bereit,         nicht_alles_ok,             start)
-TRANSITION (bereit,         schalter_einkuppeln_links,  links_eingekuppelt)
-TRANSITION (bereit,         schalter_einkuppeln_rechts, rechts_eingekuppelt)
-TRANSITION (start,          schalter_einkuppeln_links,  start)
-TRANSITION (start,          schalter_einkuppeln_rechts, start)
+//         (Anfangszustand,      Ereignis,                    Endzustand)
+TRANSITION (start,               alles_ok,                    bereit)
+TRANSITION (bereit,              nicht_alles_ok,              start)
+TRANSITION (bereit,              gezuendet,                   motor_an)
+TRANSITION (motor_an,            einkuppeln_links_gedrueckt,  links_eingekuppelt)
+TRANSITION (motor_an,            einkuppeln_rechts_gedrueckt, rechts_eingekuppelt)
+TRANSITION (links_eingekuppelt,  auskuppeln_gedrueckt,        motor_an)
+TRANSITION (rechts_eingekuppelt, auskuppeln_gedrueckt,        motor_an)

@@ -7,3 +7,4 @@ build/*.o
 build/*.i
 build/*.s
 build/dep/*
+states.pdf
