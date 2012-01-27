@@ -1,4 +1,8 @@
 Software für die Windenelektronik
+=================================
+
+Anschlüsse
+----------
 
 Vom Kühlkörper (links) nach rechts
 
@@ -12,7 +16,16 @@ Anschluss JTAG
 3. Grün TAS
 4. Braun TCK
 
-Serial interface:
+Serielle Schnittstelle
+----------------------
+
 minicom -D /dev/ttyUSB1 -b 9600
 
-Deaktivieren der HW-Flusskontrolle nicht vergessen!
+Deaktivieren der HW-Flusskontrolle in minicom nicht vergessen!
+
+Statemachine-Diagramme
+----------------------
+
+Wenn graphviz installiert ist, kann mit "make" direkt aus der Konfiguration ein Flussdiagramm
+des Mealy-Automaten erzeugt werden. Es wird die Datei "states.pdf" erstellt.
+
