@@ -24,7 +24,6 @@ typedef struct {
         char* help;
 } cmd_t;
 
-void system_init();
 void ports_init();
 void ports_reset();
 void ports_read();
@@ -89,19 +88,20 @@ struct {
 char manual = 1, state = 0;
 
 enum {
-#define STATE(name, action) STATE_##name,
+#define STATE(name) STATE_##name,
 #include "config.h"
 };
 
-#define ACTION(name, code)     void action_##name() code
-#define EVENT(name, condition) int event_##name() { return (condition); }
-#include "config.h"
-
-#define STATE(name, act) void state_##name() { state = STATE_##name; action_##act(); }
+#define ACTION(name, code) static inline void action_##name() code
 #include "config.h"
 
 int main() {
-        system_init();
+        OSCCAL = 0xA1;
+        ports_init();
+        uart_init(UART_BAUD_RATE);
+        sei();
+        print_version();
+
         for (;;) {
                 ports_read();
                 update_state();
@@ -109,16 +109,6 @@ int main() {
                 cmd_handler();
         }
         return 0;
-}
-
-void system_init() {
-        OSCCAL = 0xA1;
-        ports_init();
-        uart_init(UART_BAUD_RATE);
-        sei();
-
-        print_version();
-        state_start();
 }
 
 void ports_init() {
@@ -148,9 +138,19 @@ void ports_write() {
 void update_state() {
         if (manual)
                 return;
-#define TRANSITION(initial, ev, final) \
-        if (state == STATE_##initial && event_##ev()) \
-                return state_##final();
+
+#define EVENT(name, condition) int name = (condition);
+#include "config.h"
+
+        out.led_handbremse = in.handbremse_angezogen;
+        out.led_kappung = in.kappung_gespannt;
+        out.led_temperatur = !temperatur_ok;
+        out.led_power = 1;
+
+#define TRANS_ACTION(initial, event, final, act) \
+        if (state == STATE_##initial && event) { state = STATE_##final; action_##act(); return; }
+#define TRANS(initial, event, final) \
+        if (state == STATE_##initial && event) { state = STATE_##final; return; }
 #include "config.h"
 }
 
@@ -264,21 +264,23 @@ void cmd_on_off(int argc, char* argv[]) {
 }
 
 void cmd_mode(int argc, char* argv[]) {
-        if (argc == 2 && !strcmp(argv[1], "m"))
+        if (argc == 2 && !strcmp(argv[1], "m")) {
                 manual = 1;
-        else if (argc == 2 && !strcmp(argv[1], "a"))
+                state = 0;
+        } else if (argc == 2 && !strcmp(argv[1], "a")) {
                 manual = 0;
-        else if (argc != 1)
+                ports_reset();
+                state = 0;
+        } else if (argc != 1) {
                 usage();
+        }
 }
 
 void cmd_reset(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
-        if (check_manual()) {
+        if (check_manual())
                 ports_reset();
-                state_start();
-        }
 }
 
 void cmd_help(int argc, char* argv[]) {
