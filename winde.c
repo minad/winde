@@ -28,7 +28,9 @@ void ports_init();
 void ports_reset();
 void ports_read();
 void ports_write();
-void update_state();
+void state_update();
+const char* state_str(char);
+void state_set(char);
 
 ringbuf_t* ringbuf_init(void* buf, int8_t size);
 void       ringbuf_reset(ringbuf_t* rb);
@@ -41,7 +43,6 @@ void uart_init(uint32_t baud);
 int  uart_putchar(char c, FILE* fp);
 int  uart_getc();
 
-void prompt();
 void usage();
 int  check_manual();
 void print_version();
@@ -56,10 +57,7 @@ void cmd_reset(int argc, char* argv[]);
 void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
-ringbuf_t *uart_rx_ringbuf, *uart_tx_ringbuf;
-char       uart_rx_buf[32], uart_tx_buf[32];
-
-FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
+ringbuf_t *uart_rx_buf, *uart_tx_buf;
 
 const cmd_t cmd_list[] = {
         { "in",      0,        cmd_in,      "Print list of input ports"  },
@@ -85,7 +83,7 @@ struct {
 #include "config.h"
 } out;
 
-char manual = 1, state = 0;
+char manual = 1, state = 0, show_prompt = 1;
 
 enum {
 #define STATE(name) STATE_##name,
@@ -104,7 +102,7 @@ int main() {
 
         for (;;) {
                 ports_read();
-                update_state();
+                state_update();
                 ports_write();
                 cmd_handler();
         }
@@ -135,7 +133,21 @@ void ports_write() {
 #include "config.h"
 }
 
-void update_state() {
+const char* state_str(char state) {
+        switch (state) {
+#define STATE(name) case STATE_##name: return #name;
+#include "config.h"
+        default: return "invalid";
+        }
+}
+
+void state_set(char s) {
+        state = s;
+        printf("\nState %s\n", state_str(state));
+        show_prompt = 1;
+}
+
+void state_update() {
         if (manual)
                 return;
 
@@ -148,14 +160,10 @@ void update_state() {
         out.led_power = 1;
 
 #define TRANS_ACTION(initial, event, final, act) \
-        if (state == STATE_##initial && event) { state = STATE_##final; action_##act(); return; }
+        if (state == STATE_##initial && event) { state_set(STATE_##final); action_##act(); return; }
 #define TRANS(initial, event, final) \
-        if (state == STATE_##initial && event) { state = STATE_##final; return; }
+        if (state == STATE_##initial && event) { state_set(STATE_##final); return; }
 #include "config.h"
-}
-
-void prompt() {
-        printf(manual ? "manual> " : "> ");
 }
 
 void usage() {
@@ -205,10 +213,10 @@ const cmd_t* cmd_find(const char* name) {
 
 void cmd_handler() {
         static char line[64];
-        static int size = -1;
-        if (size < 0) {
-                prompt();
-                size = 0;
+        static int size = 0;
+        if (show_prompt) {
+                printf("%s> ", manual ? "manual" : state_str(state));
+                show_prompt = 0;
         }
         int c = uart_getc();
         if (c != EOF) {
@@ -216,7 +224,8 @@ void cmd_handler() {
                         putchar('\n');
                         line[size] = 0;
                         cmd_exec(line);
-                        size = -1;
+                        size = 0;
+                        show_prompt = 1;
                 } else if (size + 1 < sizeof (line)) {
                         putchar(c);
                         line[size++] = c;
@@ -266,11 +275,10 @@ void cmd_on_off(int argc, char* argv[]) {
 void cmd_mode(int argc, char* argv[]) {
         if (argc == 2 && !strcmp(argv[1], "m")) {
                 manual = 1;
-                state = 0;
         } else if (argc == 2 && !strcmp(argv[1], "a")) {
                 manual = 0;
                 ports_reset();
-                state = 0;
+                state_set(0);
         } else if (argc != 1) {
                 usage();
         }
@@ -354,32 +362,34 @@ void uart_init(uint32_t baud) {
         // enable serial receiver and transmitter
         UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
 
-        uart_rx_ringbuf = ringbuf_init(uart_rx_buf, sizeof (uart_rx_buf));
-        uart_tx_ringbuf = ringbuf_init(uart_tx_buf, sizeof (uart_tx_buf));
+        static char rx_buf[32], tx_buf[32];
+        uart_rx_buf = ringbuf_init(rx_buf, sizeof (rx_buf));
+        uart_tx_buf = ringbuf_init(tx_buf, sizeof (tx_buf));
 
+        static FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
         stdout = &uart_stdout;
 }
 
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        while (ringbuf_full(uart_tx_ringbuf)) {} // wait
-        ringbuf_putc(uart_tx_ringbuf, c);
+        while (ringbuf_full(uart_tx_buf)) {} // wait
+        ringbuf_putc(uart_tx_buf, c);
         UCSR0B |= (1 << UDRIE);
         return 0;
 }
 
 int uart_getc() {
-        return ringbuf_getc(uart_rx_ringbuf);
+        return ringbuf_getc(uart_rx_buf);
 }
 
 ISR(USART0_RX_vect) {
-        ringbuf_putc(uart_rx_ringbuf, UDR0);
+        ringbuf_putc(uart_rx_buf, UDR0);
 }
 
 ISR(USART0_UDRE_vect) {
-        if (!ringbuf_empty(uart_tx_ringbuf))
-                UDR0 = ringbuf_getc(uart_tx_ringbuf);
+        if (!ringbuf_empty(uart_tx_buf))
+                UDR0 = ringbuf_getc(uart_tx_buf);
         else
                 UCSR0B &= ~(1 << UDRIE);
 }
