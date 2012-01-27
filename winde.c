@@ -277,8 +277,8 @@ void cmd_mode(int argc, char* argv[]) {
                 manual = 1;
         } else if (argc == 2 && !strcmp(argv[1], "a")) {
                 manual = 0;
+                state = 0;
                 ports_reset();
-                state_set(0);
         } else if (argc != 1) {
                 usage();
         }
