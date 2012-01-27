@@ -1,7 +1,7 @@
 // Konfiguration der Ausgänge
 //        (Name,             Port, Bit,  Alias)
-OUT_ALIAS (led1,             A,    7,    led_eingekuppelt1)
-OUT_ALIAS (led2,             A,    6,    led_eingekuppelt2)
+OUT_ALIAS (led1,             A,    7,    led_eingekuppelt_links)
+OUT_ALIAS (led2,             A,    6,    led_eingekuppelt_rechts)
 OUT_ALIAS (led3,             A,    5,    led_handbremse)
 OUT_ALIAS (led4,             A,    4,    led_kappvorrichtung)
 OUT_ALIAS (led5,             A,    3,    led_temperatur)
@@ -21,35 +21,54 @@ OUT_ALIAS (system6,          C,    7,    auszugsbremse)
 
 // Konfiguration der Eingänge
 //       (Name,              Port, Bit,  Alias)
-IN_ALIAS (schalter1,         E,    2,    schalter_trommel1)
-IN_ALIAS (schalter2,         E,    3,    schalter_trommel2)
+IN_ALIAS (schalter1,         E,    2,    schalter_trommel_links)
+IN_ALIAS (schalter2,         E,    3,    schalter_trommel_rechts)
 IN_ALIAS (schalter3,         E,    4,    schalter_bremse_auf)
 IN       (schalter4,         E,    5)
 IN_ALIAS (schalter5,         E,    6,    schalter_auskuppeln)
 IN       (schalter6,         B,    5)
 IN_ALIAS (system1,           D,    7,    bremse_getreten)
-IN_ALIAS (system2,           D,    6,    gangwarnung)
-IN_ALIAS (system3,           D,    5,    drehzahl1)
-IN_ALIAS (system4,           D,    4,    drehzahl2)
-IN_ALIAS (system5,           D,    3,    temperatur_motor)
-IN_ALIAS (system6,           D,    2,    temperatur_wandler)
-IN       (system7,           D,    1)
-IN_ALIAS (system8,           D,    0,    handbremse)
+IN_ALIAS (system2,           D,    6,    falscher_gang)
+IN_ALIAS (system3,           D,    5,    drehzahl_links)
+IN_ALIAS (system4,           D,    4,    drehzahl_rechts)
+IN_ALIAS (system5,           D,    3,    falsche_motor_temp)
+IN_ALIAS (system6,           D,    2,    falsche_wandler_temp)
+IN_ALIAS (system7,           D,    1,    kappvorrichtung_gespannt)
+IN_ALIAS (system8,           D,    0,    handbremse_angezogen)
 IN       (system9,           B,    7)
 
 // Zustände des Automaten
 //    (Zustandsname)
-STATE (initial)
-STATE (final)
+STATE (start)
+STATE (bereit)
+STATE (links_eingekuppelt)
+STATE (rechts_eingekuppelt)
+STATE (ende)
 
 // Ereignisse, die Zustandsübergänge auslösen
-//    (Ereignisname,       Boolescher Ausdruck)
-EVENT (schalter_gedrueckt, in.schalter1)
+//    (Ereignisname,               Boolescher Ausdruck)
+EVENT (alles_ok,                   in.kappvorrichtung_gespannt &&
+                                   in.bremse_getreten &&
+                                   in.handbremse_angezogen &&
+          			   !in.falscher_gang &&
+                                   !in.falsche_motor_temp &&
+                                   !in.falsche_wandler_temp)
+EVENT (nicht_alles_ok,             !event_alles_ok())
+EVENT (schalter_einkuppeln_links,  in.schalter_einkuppeln_links)
+EVENT (schalter_einkuppeln_rechts, in.schalter_einkuppeln_rechts)
 
 // Aktionen beim Übergang zwischen Zuständen
 //     (Aktionsname, Code-Block)
-ACTION (einkuppeln,  {out.led_eingekuppelt1 = 1;})
+ACTION (aktualisiere_kontroll_leds, {})
+ACTION (links_einkuppeln, {})
+ACTION (rechts_einkuppeln, {})
 
 // Übergänge zwischen Zuständen
-//         (Anfangszustand, Ereignis,           Aktion,     Endzustand)
-TRANSITION (initial,        schalter_gedrueckt, einkuppeln, final)
+//         (Anfangszustand, Ereignis,                   Aktion,                     Endzustand)
+TRANSITION (start,          alles_ok,                   aktualisiere_kontroll_leds, bereit)
+TRANSITION (start,          nicht_alles_ok,             aktualisiere_kontroll_leds, start)
+TRANSITION (bereit,         nicht_alles_ok,             aktualisiere_kontroll_leds, start)
+TRANSITION (bereit,         schalter_einkuppeln_links,  links_einkuppeln,           links_eingekuppelt)
+TRANSITION (bereit,         schalter_einkuppeln_rechts, rechts_einkuppeln,          rechts_eingekuppelt)
+TRANSITION (start,          schalter_einkuppeln_links,  links_einkuppeln,           start)
+TRANSITION (start,          schalter_einkuppeln_rechts, rechts_einkuppeln,          start)
