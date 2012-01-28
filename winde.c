@@ -162,9 +162,9 @@ void state_update() {
                      (state != STATE_bereit && in.schalter_auszugsbremse_auf) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln); 
 
-#define TRANS_ACTION(initial, event, final, act) \
+#define TRANS_ACTION(initial, event, final, color, act) \
         if (state == STATE_##initial && event) { state_set(STATE_##final); action_##act(); return; }
-#define TRANS(initial, event, final) \
+#define TRANS(initial, event, final, color) \
         if (state == STATE_##initial && event) { state_set(STATE_##final); return; }
 #include "config.h"
 }

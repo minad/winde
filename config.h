@@ -20,10 +20,10 @@
 #  define EVENT(name, condition)
 #endif
 #ifndef TRANS
-#  define TRANS(initial, event, final)
+#  define TRANS(initial, event, final, color)
 #endif
 #ifndef TRANS_ACTION
-#  define TRANS_ACTION(initial, event, final, action)
+#  define TRANS_ACTION(initial, event, final, color, action)
 #endif
 
 #include "config"
