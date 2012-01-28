@@ -90,7 +90,7 @@ enum {
 #include "config.h"
 };
 
-#define ACTION(name, code) static inline void action_##name() code
+#define ACTION(name, code) static inline void action_##name() { code }
 #include "config.h"
 
 int main() {

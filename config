@@ -14,8 +14,8 @@ OUT       (zuendungsfreigabe, C,    0)
 OUT       (zuendungsbruecke,  C,    1) // Zündung überbrücken, wenn 1 kann Zündung nicht mehr ausgemacht werden
 OUT       (system1,           C,    2)
 OUT       (system2,           C,    3)
-OUT       (system3,           C,    4)
-OUT       (system4,           C,    5)
+OUT_ALIAS (system3,           C,    4,    einkuppeln_links)
+OUT_ALIAS (system4,           C,    5,    einkuppeln_rechts)
 OUT_ALIAS (system5,           C,    6,    trommelbremse_auf)
 OUT_ALIAS (system6,           C,    7,    auszugsbremse_auf)
 
@@ -57,14 +57,14 @@ EVENT (temp_ok,      !in.motor_temp_zu_hoch && !in.wandler_temp_zu_hoch)
 
 // Aktionen beim Betreten eines Zustands
 //     (Aktionsname,                Code-Block)
-ACTION (links_einkuppeln,           {out.auszugsbremse_auf = 1;})
-ACTION (rechts_einkuppeln,          {out.auszugsbremse_auf = 1;})
-ACTION (auskuppeln,                 {out.auszugsbremse_auf = 0;})
-ACTION (latch_ausschalten,          {out.latch_aus = 1;})
-ACTION (zuendung_freigeben,         {})
-ACTION (zuendung_sperren,           {})
-ACTION (auszugsbremse_auf,          {out.auszugsbremse_auf = 1;})
-ACTION (auszugsbremse_zu,           {out.auszugsbremse_auf = 0;})
+ACTION (links_einkuppeln,           out.auszugsbremse_auf = out.trommelbremse_auf = out.einkuppeln_links = 1;)
+ACTION (rechts_einkuppeln,          out.auszugsbremse_auf = out.trommelbremse_auf = out.einkuppeln_rechts = 1;)
+ACTION (auskuppeln,                 out.auszugsbremse_auf = out.trommelbremse_auf = out.einkuppeln_links = out.einkuppeln_rechts = 0;)
+ACTION (latch_ausschalten,          out.latch_aus = 1;)
+ACTION (zuendung_freigeben,         out.zuendungsfreigabe = 1;)
+ACTION (zuendung_sperren,           out.zuendungsfreigabe = 0;)
+ACTION (auszugsbremse_auf,          out.auszugsbremse_auf = out.trommelbremse_auf = 1;)
+ACTION (auszugsbremse_zu,           out.auszugsbremse_auf = out.trommelbremse_auf = 0;)
 
 // Übergänge zwischen Zuständen
 //           (Anfangszustand,      Ereignis,                       Endzustand,          Attribute,               Aktion)
