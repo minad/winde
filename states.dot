@@ -1,12 +1,20 @@
 digraph state_machine {
 	rankdir = LR;
-	node [ shape = circle, style = bold ];
+	node [ shape = circle, style = bold, fontname = "Helvetica-Bold" ];
+
+#define RED     color=red,fontcolor=red
+#define BLUE    color=blue,fontcolor=blue
+#define GREEN   color=green,fontcolor=green
+#define MAGENTA color=magenta,fontcolor=magenta
 
 #define REMOVE_PARENS(...) __VA_ARGS__
-#define STATE(name, attrs) name [ label = <<b>name</b>>, REMOVE_PARENS attrs ]
+#define STRING(s) #s
+
+#define STATE(name, attrs) name [ label = STRING(name), REMOVE_PARENS attrs ]
 #include "config.h"
 
-#define TRANS(initial, event, final, attrs) initial -> final [ label = <event>, REMOVE_PARENS attrs ];
-#define TRANS_ACTION(initial, event, final, attrs, action) initial -> final [ label = <event / action>, REMOVE_PARENS attrs ];
+#define TRANS(initial, event, final, attrs) initial -> final [ label = STRING(event), fontname = "Helvetica", REMOVE_PARENS attrs ];
+#define TRANS_ACTION(initial, event, final, attrs, action) initial -> final [ label = STRING(event / action), fontname = "Helvetica", REMOVE_PARENS attrs ];
 #include "config.h"
 }
+
