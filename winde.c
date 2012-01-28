@@ -163,9 +163,9 @@ void state_update() {
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln); 
 
 #define TRANS_ACTION(initial, event, final, attrs, act) \
-        if (state == STATE_##initial && event) { state_set(STATE_##final); action_##act(); return; }
+        if (state == STATE_##initial && (event)) { state_set(STATE_##final); action_##act(); return; }
 #define TRANS(initial, event, final, attrs) \
-        if (state == STATE_##initial && event) { state_set(STATE_##final); return; }
+        if (state == STATE_##initial && (event)) { state_set(STATE_##final); return; }
 #include "config.h"
 }
 
