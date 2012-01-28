@@ -8,3 +8,4 @@ build/*.i
 build/*.s
 build/dep/*
 states.pdf
+states.dot.tmp
