@@ -39,7 +39,7 @@ IN_ALIAS (system9,            B,    7,    motor_an)
 
 // Zustände des Automaten
 //    (Zustandsname,        Attribute)
-STATE (start,               (shape = doublecircle))
+STATE (start,               (shape=doublecircle))
 STATE (bereit,              ())
 STATE (motor_an,            ())
 STATE (temp_ok,             ())
