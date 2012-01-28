@@ -11,7 +11,7 @@
 #  define IN(name, port, bit)
 #endif
 #ifndef STATE
-#  define STATE(name)
+#  define STATE(name, attrs)
 #endif
 #ifndef ACTION
 #  define ACTION(name, code)
@@ -20,10 +20,10 @@
 #  define EVENT(name, condition)
 #endif
 #ifndef TRANS
-#  define TRANS(initial, event, final, color)
+#  define TRANS(initial, event, final, attrs)
 #endif
 #ifndef TRANS_ACTION
-#  define TRANS_ACTION(initial, event, final, color, action)
+#  define TRANS_ACTION(initial, event, final, attrs, action)
 #endif
 
 #include "config"

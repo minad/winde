@@ -1,13 +1,12 @@
 digraph state_machine {
 	rankdir = LR;
-
-	node [ shape = doublecircle, style = bold ]; start;
 	node [ shape = circle, style = bold ];
 
-#define STATE(name) name [ label = <<b>name</b>> ]
+#define REMOVE_PARENS(...) __VA_ARGS__
+#define STATE(name, attrs) name [ label = <<b>name</b>>, REMOVE_PARENS attrs ]
 #include "config.h"
 
-#define TRANS(initial, event, final, c) initial -> final [ label = <event>, color = c ];
-#define TRANS_ACTION(initial, event, final, c, action) initial -> final [ label = <event / action>, color = c ];
+#define TRANS(initial, event, final, attrs) initial -> final [ label = <event>, REMOVE_PARENS attrs ];
+#define TRANS_ACTION(initial, event, final, attrs, action) initial -> final [ label = <event / action>, REMOVE_PARENS attrs ];
 #include "config.h"
 }

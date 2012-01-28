@@ -86,7 +86,7 @@ struct {
 char manual = 1, state = 0, show_prompt = 1;
 
 enum {
-#define STATE(name) STATE_##name,
+#define STATE(name, attrs) STATE_##name,
 #include "config.h"
 };
 
@@ -135,7 +135,7 @@ void ports_write() {
 
 const char* state_str(char state) {
         switch (state) {
-#define STATE(name) case STATE_##name: return #name;
+#define STATE(name, attrs) case STATE_##name: return #name;
 #include "config.h"
         default: return "invalid";
         }
@@ -156,15 +156,15 @@ void state_update() {
 
         out.led_handbremse = in.handbremse_angezogen;
         out.led_kappung = in.kappung_gespannt;
-        out.led_temperatur = !temperatur_ok;
+        out.led_temperatur = !temp_ok;
         out.led_power = 1;
         out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
                      (state != STATE_bereit && in.schalter_auszugsbremse_auf) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln); 
 
-#define TRANS_ACTION(initial, event, final, color, act) \
+#define TRANS_ACTION(initial, event, final, attrs, act) \
         if (state == STATE_##initial && event) { state_set(STATE_##final); action_##act(); return; }
-#define TRANS(initial, event, final, color) \
+#define TRANS(initial, event, final, attrs) \
         if (state == STATE_##initial && event) { state_set(STATE_##final); return; }
 #include "config.h"
 }
