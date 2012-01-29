@@ -16,9 +16,9 @@ typedef struct {
 } ringbuf_t;
 
 typedef struct {
+        void (*fn)(int, char*[]);
         char* name;
         char* args;
-        void (*fn)(int, char*[]);
         char* help;
 } cmd_t;
 
@@ -58,14 +58,14 @@ void cmd_version(int argc, char* argv[]);
 ringbuf_t *uart_rx_buf, *uart_tx_buf;
 
 const cmd_t cmd_list[] = {
-        { "in",      "",       cmd_in,      "Print list of input ports"  },
-        { "out",     "",       cmd_out,     "Print list of output ports" },
-        { "on",      "<port>", cmd_on_off,  "Set port on"                },
-        { "off",     "<port>", cmd_on_off,  "Set port off"               },
-        { "mode",    "[a|m]",  cmd_mode,    "Set automatic/manual mode"  },
-        { "reset",   "",       cmd_reset,   "Reset system"               },
-        { "help",    "[cmd]",  cmd_help,    "Print this help"            },
-        { "version", "",       cmd_version, "Print version"              },
+        { cmd_in,     "in",       "",        "Print list of input ports"  },
+        { cmd_out,     "out",     "",        "Print list of output ports" },
+        { cmd_on_off,  "on",      "<port>",  "Set port on"                },
+        { cmd_on_off,  "off",     "<port>",  "Set port off"               },
+        { cmd_mode,    "mode",    "[a|m]",   "Set automatic/manual mode"  },
+        { cmd_reset,   "reset",   "",        "Reset system"               },
+        { cmd_help,    "help",    "[cmd]",   "Print this help"            },
+        { cmd_version, "version", "",        "Print version"              },
         { 0,                                                             },
 }, *current_cmd = 0;
 
@@ -204,7 +204,7 @@ void cmd_exec(char* line) {
 }
 
 const cmd_t* cmd_find(const char* name) {
-        for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd) {
+        for (const cmd_t* cmd = cmd_list; cmd->fn; ++cmd) {
                 if (!strcmp(cmd->name, name))
                         return cmd;
         }
@@ -295,7 +295,7 @@ void cmd_reset(int argc, char* argv[]) {
 void cmd_help(int argc, char* argv[]) {
         if (argc == 1) {
                 printf("List of commands:\n");
-                for (const cmd_t* cmd = cmd_list; cmd->name; ++cmd)
+                for (const cmd_t* cmd = cmd_list; cmd->fn; ++cmd)
                         printf("  %20s %s\n", cmd->name, cmd->help);
                 putchar('\n');
         } else if (argc == 2) {
