@@ -1,6 +1,6 @@
 // Konfiguration der Ausgänge
 //        (Name,              Port, Bit, Alias)
-OUT_ALIAS (led1,              A,    7,    led_eingekuppelt_links)
+OUT_ALIAS (led1,              A,    7,   led_eingekuppelt_links)
 OUT_ALIAS (led2,              A,    6,   led_eingekuppelt_rechts)
 OUT_ALIAS (led3,              A,    5,   led_handbremse)
 OUT_ALIAS (led4,              A,    4,   led_kappung)
