@@ -23,9 +23,14 @@ minicom -D /dev/ttyUSB1 -b 9600
 
 Deaktivieren der HW-Flusskontrolle in minicom nicht vergessen!
 
+Konfiguration der Windensoftware
+--------------------------------
+
+Die Konfiguration der Windensoftware befindet sich in der Datei "config".
+
 Statemachine-Diagramme
 ----------------------
 
 Wenn graphviz installiert ist, kann mit "make" direkt aus der Konfiguration ein Flussdiagramm
-des Mealy-Automaten erzeugt werden. Es wird die Datei "states.pdf" erstellt.
+des Mealy-Automaten erzeugt werden. Es wird die Datei "statemachine.pdf" erstellt.
 
