@@ -11,9 +11,7 @@
 #define TABLE_FORMAT   "%-20s | %-24s | %-4s | %s\n"
 
 typedef struct {
-        int8_t read;
-        int8_t write;
-        int8_t size;
+        int8_t read, write, size;
         char   buf[0];
 } ringbuf_t;
 
