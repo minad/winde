@@ -58,14 +58,14 @@ void cmd_version(int argc, char* argv[]);
 ringbuf_t *uart_rx_buf, *uart_tx_buf;
 
 const cmd_t cmd_list[] = {
-        { cmd_in,     "in",       "",        "Print list of input ports"  },
-        { cmd_out,     "out",     "",        "Print list of output ports" },
-        { cmd_on_off,  "on",      "<port>",  "Set port on"                },
-        { cmd_on_off,  "off",     "<port>",  "Set port off"               },
-        { cmd_mode,    "mode",    "[a|m]",   "Set automatic/manual mode"  },
-        { cmd_reset,   "reset",   "",        "Reset system"               },
-        { cmd_help,    "help",    "[cmd]",   "Print this help"            },
-        { cmd_version, "version", "",        "Print version"              },
+        { cmd_in,      "in",      "",       "Print list of input ports"  },
+        { cmd_out,     "out",     "",       "Print list of output ports" },
+        { cmd_on_off,  "on",      "<port>", "Set port on"                },
+        { cmd_on_off,  "off",     "<port>", "Set port off"               },
+        { cmd_mode,    "mode",    "[a|m]",  "Set automatic/manual mode"  },
+        { cmd_reset,   "reset",   "",       "Reset system"               },
+        { cmd_help,    "help",    "[cmd]",  "Print this help"            },
+        { cmd_version, "version", "",       "Print version"              },
         { 0,                                                             },
 }, *current_cmd = 0;
 
