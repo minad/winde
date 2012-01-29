@@ -7,4 +7,6 @@ build/*.o
 build/*.i
 build/*.s
 build/dep/*
-states.pdf
+statemachine.png
+statemachine.pdf
+statemachine.svg
