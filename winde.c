@@ -31,7 +31,6 @@ const char* state_str(char);
 void state_set(char);
 
 ringbuf_t* ringbuf_init(void* buf, int8_t size);
-void       ringbuf_reset(ringbuf_t* rb);
 int        ringbuf_full(ringbuf_t* rb);
 int        ringbuf_empty(ringbuf_t* rb);
 int        ringbuf_putc(ringbuf_t* rb, char c);
@@ -97,7 +96,6 @@ int main() {
         uart_init(UART_BAUD_RATE);
         sei();
         print_version();
-
         for (;;) {
                 ports_read();
                 state_update();
@@ -316,13 +314,8 @@ void cmd_version(int argc, char* argv[]) {
 ringbuf_t* ringbuf_init(void* buf, int8_t size) {
 	ringbuf_t *rb = (ringbuf_t*)buf;
 	rb->size = size - sizeof(ringbuf_t);
-	ringbuf_reset(rb);
-	return rb;
-}
-
-void ringbuf_reset(ringbuf_t* rb) {
 	rb->read = rb->write = 0;
-        memset(rb->buf, 0, rb->size);
+	return rb;
 }
 
 int ringbuf_full(ringbuf_t* rb) {
