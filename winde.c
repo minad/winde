@@ -17,7 +17,7 @@ typedef struct {
 
 typedef struct {
         char* name;
-        char* usage;
+        char* args;
         void (*fn)(int, char*[]);
         char* help;
 } cmd_t;
@@ -58,14 +58,14 @@ void cmd_version(int argc, char* argv[]);
 ringbuf_t *uart_rx_buf, *uart_tx_buf;
 
 const cmd_t cmd_list[] = {
-        { "in",      0,        cmd_in,      "Print list of input ports"  },
-        { "out",     0,        cmd_out,     "Print list of output ports" },
+        { "in",      "",       cmd_in,      "Print list of input ports"  },
+        { "out",     "",       cmd_out,     "Print list of output ports" },
         { "on",      "<port>", cmd_on_off,  "Set port on"                },
         { "off",     "<port>", cmd_on_off,  "Set port off"               },
         { "mode",    "[a|m]",  cmd_mode,    "Set automatic/manual mode"  },
-        { "reset",   0,        cmd_reset,   "Reset system"               },
+        { "reset",   "",       cmd_reset,   "Reset system"               },
         { "help",    "[cmd]",  cmd_help,    "Print this help"            },
-        { "version", 0,        cmd_version, "Print version"              },
+        { "version", "",       cmd_version, "Print version"              },
         { 0,                                                             },
 }, *current_cmd = 0;
 
@@ -168,7 +168,7 @@ void state_update() {
 }
 
 void usage() {
-        printf("Usage: %s %s\n", current_cmd->name, current_cmd->usage ? current_cmd->usage : "");
+        printf("Usage: %s %s\n", current_cmd->name, current_cmd->args);
 }
 
 int check_manual() {
@@ -301,7 +301,7 @@ void cmd_help(int argc, char* argv[]) {
         } else if (argc == 2) {
                 const cmd_t* cmd = cmd_find(argv[1]);
                 if (cmd)
-                        printf("Usage: %s %s\n%s\n", cmd->name, cmd->usage, cmd->help);
+                        printf("Usage: %s %s\n%s\n", cmd->name, cmd->args, cmd->help);
         } else {
                 usage();
         }
