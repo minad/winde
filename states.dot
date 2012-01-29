@@ -4,11 +4,11 @@ digraph state_machine {
 	initial [ shape = point, width=0.2 ];
 	initial -> start;
 
-#define COLOR(c)   color=c,fontcolor=c
-#define RED        COLOR(red)
-#define BLUE       COLOR(blue)
-#define GREEN      COLOR(green)
-#define DODGERBLUE COLOR(dodgerblue)
+#define COLOR(c) color=c,fontcolor=c
+#define RED      COLOR(red)
+#define BLUE     COLOR(blue)
+#define GREEN    COLOR(green)
+#define BLUE2    COLOR(dodgerblue)
 
 #define REMOVE_PARENS(...) __VA_ARGS__
 #define STRING(s) #s
