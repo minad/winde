@@ -1,6 +1,8 @@
 digraph state_machine {
 	rankdir = LR;
 	node [ shape = circle, style = bold, fontname = "Helvetica-Bold" ];
+	initial [ shape = point, width=0.2 ];
+	initial -> start;
 
 #define RED     color=red,fontcolor=red
 #define BLUE    color=blue,fontcolor=blue

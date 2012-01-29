@@ -39,14 +39,14 @@ IN_ALIAS (system9,            B,    7,    motor_an)
 
 // Zustände des Automaten
 //    (Zustandsname,        Graphviz-Attribute)
-STATE (start,               (shape=doublecircle))
+STATE (start,               ())
 STATE (aufbau_ok,           ())
 STATE (motor_an,            ())
 STATE (temp_ok,             ())
 STATE (bremse_getreten,     ())
 STATE (links_eingekuppelt,  ())
 STATE (rechts_eingekuppelt, ())
-STATE (schlepp_laeuft,      ())
+STATE (schlepp_laeuft,      (shape=doublecircle))
 STATE (fehler,              (RED))
 STATE (ausziehen,           (MAGENTA))
 
