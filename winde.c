@@ -17,9 +17,7 @@ typedef struct {
 
 typedef struct {
         void (*fn)(int, char*[]);
-        char* name;
-        char* args;
-        char* help;
+        char *name, *args, *help;
 } cmd_t;
 
 void ports_init();
