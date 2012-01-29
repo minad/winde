@@ -95,4 +95,4 @@ TRANS_ACTION (rechts_eingekuppelt, !in.bremse_getreten,            schlepp_laeuf
 TRANS_ACTION (links_eingekuppelt,  !aufbau_ok,                     motor_an_fehler,     (RED),              auskuppeln)
 TRANS_ACTION (rechts_eingekuppelt, !aufbau_ok,                     motor_an_fehler,     (RED),              auskuppeln)
 TRANS        (motor_an_fehler,     aufbau_ok,                      motor_an,            ())
-TRANS        (motor_an_fehler,     !in.motor_an,                   temp_ok,              (RED))
+TRANS        (motor_an_fehler,     !in.motor_an,                   temp_ok,             (RED))
