@@ -52,7 +52,7 @@ void cmd_reset(int argc, char* argv[]);
 void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
-ringbuf_t *uart_rx_buf, *uart_tx_buf;
+ringbuf_t *uart_rxbuf, *uart_txbuf;
 
 const cmd_t cmd_list[] = {
         { cmd_in,      "in",      "",       "Print list of input ports"  },
@@ -354,9 +354,9 @@ void uart_init(uint32_t baud) {
         // enable serial receiver and transmitter
         UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
 
-        static char rx_buf[32], tx_buf[32];
-        uart_rx_buf = ringbuf_init(rx_buf, sizeof (rx_buf));
-        uart_tx_buf = ringbuf_init(tx_buf, sizeof (tx_buf));
+        static char rxbuf[32], txbuf[32];
+        uart_rxbuf = ringbuf_init(rxbuf, sizeof (rxbuf));
+        uart_txbuf = ringbuf_init(txbuf, sizeof (txbuf));
 
         static FILE uart_stdout = FDEV_SETUP_STREAM(uart_putchar, 0, _FDEV_SETUP_WRITE);
         stdout = &uart_stdout;
@@ -365,23 +365,23 @@ void uart_init(uint32_t baud) {
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        while (ringbuf_full(uart_tx_buf)) {} // wait
-        ringbuf_putc(uart_tx_buf, c);
+        while (ringbuf_full(uart_txbuf)) {} // wait
+        ringbuf_putc(uart_txbuf, c);
         UCSR0B |= (1 << UDRIE);
         return 0;
 }
 
 int uart_getc() {
-        return ringbuf_getc(uart_rx_buf);
+        return ringbuf_getc(uart_rxbuf);
 }
 
 ISR(USART0_RX_vect) {
-        ringbuf_putc(uart_rx_buf, UDR0);
+        ringbuf_putc(uart_rxbuf, UDR0);
 }
 
 ISR(USART0_UDRE_vect) {
-        if (!ringbuf_empty(uart_tx_buf))
-                UDR0 = ringbuf_getc(uart_tx_buf);
+        if (!ringbuf_empty(uart_txbuf))
+                UDR0 = ringbuf_getc(uart_txbuf);
         else
                 UCSR0B &= ~(1 << UDRIE);
 }
