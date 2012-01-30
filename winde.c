@@ -65,13 +65,18 @@ const prog_char S_PORT[]         = "Port";
 const prog_char S_ACTIVE[]       = "Active";
 
 #define CMD(name, fn, args, help) \
-        const prog_char cmd_##name##_name[] = #name; \
-        const prog_char cmd_##name##_args[] = args; \
-        const prog_char cmd_##name##_help[] = help;
+        const prog_char S_cmd_##name##_name[] = #name; \
+        const prog_char S_cmd_##name##_args[] = args; \
+        const prog_char S_cmd_##name##_help[] = help;
+#define OUT(name, port, bit) \
+        const prog_char S_out_##name##_name[] = #name;
+#define OUT_ALIAS(name, port, bit, alias) \
+        const prog_char S_out_##name##_name[] = #name; \
+        const prog_char S_out_##name##_alias[] = #alias;
 #include "config.h"
 
 const cmd_t PROGMEM cmd_list[] = {
-#define CMD(name, fn, args, help) { cmd_##fn, cmd_##name##_name, cmd_##name##_args, cmd_##name##_help },
+#define CMD(name, fn, args, help) { cmd_##fn, S_cmd_##name##_name, S_cmd_##name##_args, S_cmd_##name##_help },
 #include "config.h"
         { 0 }
 };
@@ -200,7 +205,7 @@ void cmd_exec(char* line) {
         int argc;
         cmd_t cmd;
         for (argc = 0; argc < MAX_ARGS; ++argc) {
-                if (!(argv[argc] = strsep(&line, " \t")) || *argv[argc] == '\0')
+                if (!(argv[argc] = strsep_P(&line, PSTR(" \t"))) || *argv[argc] == '\0')
                         break;
         }
         if (argc > 0 && (current_cmd = cmd_find(argv[0], &cmd)))
@@ -260,9 +265,9 @@ void cmd_out(int argc, char* argv[]) {
         printf_P(PSTR("Outputs:\n"));
         printf_P(S_TABLE_FORMAT, S_NAME, S_ALIAS, S_PORT, S_ACTIVE);
 #define OUT(name, port, bit) \
-        printf_P(S_TABLE_FORMAT, PSTR(#name), S_EMPTY, PSTR(#port#bit), out.name ? S_X : S_EMPTY);
+        printf_P(S_TABLE_FORMAT, S_out_##name##_name, S_EMPTY, PSTR(#port#bit), out.name ? S_X : S_EMPTY);
 #define OUT_ALIAS(name, port, bit, alias) \
-        printf_P(S_TABLE_FORMAT, PSTR(#name), PSTR(#alias), PSTR(#port#bit), out.name ? S_X : S_EMPTY);
+        printf_P(S_TABLE_FORMAT, S_out_##name##_name, S_out_##name##_alias, PSTR(#port#bit), out.name ? S_X : S_EMPTY);
 #include "config.h"
         putchar('\n');
 }
@@ -271,19 +276,19 @@ void cmd_on_off(int argc, char* argv[]) {
         if (argc != 2)
                 return usage();
         if (check_manual()) {
-                int on = strcmp(argv[0], "on") ? 0 : 1;
+                int on = strcmp_P(argv[0], PSTR("on")) ? 0 : 1;
 #define OUT(name, port, bit) \
-                if (!strcmp(argv[1], #name)) { out.name = on; return; }
-#define OUT_ALIAS(name, port, bit, alias)                               \
-                if (!strcmp(argv[1], #name) || !strcmp(argv[1], #alias)) { out.name = on; return; }
+                if (!strcmp_P(argv[1], S_out_##name##_name)) { out.name = on; return; }
+#define OUT_ALIAS(name, port, bit, alias) \
+                if (!strcmp_P(argv[1], S_out_##name##_name) || !strcmp_P(argv[1], S_out_##name##_alias)) { out.name = on; return; }
 #include "config.h"
         }
 }
 
 void cmd_mode(int argc, char* argv[]) {
-        if (argc == 2 && !strcmp(argv[1], "m")) {
+        if (argc == 2 && !strcmp_P(argv[1], PSTR("m"))) {
                 manual = 1;
-        } else if (argc == 2 && !strcmp(argv[1], "a")) {
+        } else if (argc == 2 && !strcmp_P(argv[1], PSTR("a"))) {
                 manual = 0;
                 state = 0;
                 ports_reset();
