@@ -9,6 +9,8 @@
 
 #define UART_BAUD_RATE 9600
 #define MAX_ARGS       4
+#define RINGBUF_RXSIZE 32
+#define RINGBUF_TXSIZE 64
 
 typedef struct {
         int8_t read, write, size;
@@ -362,7 +364,7 @@ void uart_init(uint32_t baud) {
         // enable serial receiver and transmitter
         UCSR0B = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE);
 
-        static char rxbuf[32], txbuf[32];
+        static char rxbuf[RINGBUF_RXSIZE], txbuf[RINGBUF_TXSIZE];
         uart_rxbuf = ringbuf_init(rxbuf, sizeof (rxbuf));
         uart_txbuf = ringbuf_init(txbuf, sizeof (txbuf));
 
