@@ -9,7 +9,6 @@
 
 #define UART_BAUD_RATE 9600
 #define MAX_ARGS       4
-#define TABLE_FORMAT   "%-20s | %-24s | %-4s | %s\n"
 
 typedef struct {
         int8_t read, write, size;
@@ -54,6 +53,10 @@ void cmd_help(int argc, char* argv[]);
 void cmd_version(int argc, char* argv[]);
 
 ringbuf_t *uart_rxbuf, *uart_txbuf;
+
+const prog_char S_TABLE_FORMAT[] = "%-20S | %-24S | %-4S | %S\n";
+const prog_char S_X[]            = "X";
+const prog_char S_EMPTY[]        = "";
 
 const cmd_t cmd_list[] = {
         { cmd_in,      "in",      "",       "Print list of input ports"  },
@@ -130,15 +133,15 @@ void ports_write() {
 
 const char* state_str(char state) {
         switch (state) {
-#define STATE(name, attrs) case STATE_##name: return #name;
+#define STATE(name, attrs) case STATE_##name: return PSTR(#name);
 #include "config.h"
-        default: return "invalid";
+        default: return PSTR("invalid");
         }
 }
 
 void state_set(char s) {
         state = s;
-        printf_P(PSTR("\nState %s\n"), state_str(state));
+        printf_P(PSTR("\nState %S\n"), state_str(state));
         show_prompt = 1;
 }
 
@@ -213,7 +216,7 @@ void cmd_handler() {
         static char line[64];
         static int size = 0;
         if (show_prompt) {
-                printf_P(PSTR("%s> "), manual ? "manual" : state_str(state));
+                printf_P(PSTR("%S> "), manual ? PSTR("manual") : state_str(state));
                 show_prompt = 0;
         }
         int c = uart_getc();
@@ -235,11 +238,11 @@ void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Inputs:\n"));
-        printf_P(PSTR(TABLE_FORMAT), "Name", "Alias", "Port", "Active");
+        printf_P(S_TABLE_FORMAT, PSTR("Name"), PSTR("Alias"), PSTR("Port"), PSTR("Active"));
 #define IN(name, port, bit) \
-        printf_P(PSTR(TABLE_FORMAT), #name, "", #port#bit, in.name ? "X" : "");
+        printf_P(S_TABLE_FORMAT, PSTR(#name), S_EMPTY, PSTR(#port#bit), in.name ? S_X : S_EMPTY);
 #define IN_ALIAS(name, port, bit, alias) \
-        printf_P(PSTR(TABLE_FORMAT), #name, #alias, #port#bit, in.name ? "X" : "");
+        printf_P(S_TABLE_FORMAT, PSTR(#name), PSTR(#alias), PSTR(#port#bit), in.name ? S_X : S_EMPTY);
 #include "config.h"
         putchar('\n');
 }
@@ -248,11 +251,11 @@ void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Outputs:\n"));
-        printf_P(PSTR(TABLE_FORMAT), "Name", "Alias", "Port", "Active");
+        printf_P(S_TABLE_FORMAT, PSTR("Name"), PSTR("Alias"), PSTR("Port"), PSTR("Active"));
 #define OUT(name, port, bit) \
-        printf_P(PSTR(TABLE_FORMAT), #name, "", #port#bit, out.name ? "X" : "");
+        printf_P(S_TABLE_FORMAT, PSTR(#name), S_EMPTY, PSTR(#port#bit), out.name ? S_X : S_EMPTY);
 #define OUT_ALIAS(name, port, bit, alias) \
-        printf_P(PSTR(TABLE_FORMAT), #name, #alias, #port#bit, out.name ? "X" : "");
+        printf_P(S_TABLE_FORMAT, PSTR(#name), PSTR(#alias), PSTR(#port#bit), out.name ? S_X : S_EMPTY);
 #include "config.h"
         putchar('\n');
 }
