@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 
 #define UART_BAUD_RATE 9600
 #define MAX_ARGS       4
@@ -137,7 +138,7 @@ const char* state_str(char state) {
 
 void state_set(char s) {
         state = s;
-        printf("\nState %s\n", state_str(state));
+        printf_P(PSTR("\nState %s\n"), state_str(state));
         show_prompt = 1;
 }
 
@@ -164,22 +165,22 @@ void state_update() {
 }
 
 void usage() {
-        printf("Usage: %s %s\n", current_cmd->name, current_cmd->args);
+        printf_P(PSTR("Usage: %s %s\n"), current_cmd->name, current_cmd->args);
 }
 
 int check_manual() {
         if (!manual)
-                printf("Enable manual mode first!\n");
+                printf_P(PSTR("Enable manual mode first!\n"));
         return manual;
 }
 
 void print_version() {
-        printf("\nSteuersoftware der Winde AFK-3\n"
-               "  Version:       " VERSION "\n"
-               "  Git-Version:   " GIT_VERSION "\n"
-               "  Kompiliert am: " __DATE__ " " __TIME__ "\n"
-               "  Elektronik:    Christian 'Paule' Schreiber\n"
-               "  Software:      Daniel 'Teilchen' Mendler\n\n");
+        printf_P(PSTR("\nSteuersoftware der Winde AFK-3\n"
+                      "  Version:       " VERSION "\n"
+                      "  Git-Version:   " GIT_VERSION "\n"
+                      "  Kompiliert am: " __DATE__ " " __TIME__ "\n"
+                      "  Elektronik:    Christian 'Paule' Schreiber\n"
+                      "  Software:      Daniel 'Teilchen' Mendler\n\n"));
 }
 
 void cmd_exec(char* line) {
@@ -204,7 +205,7 @@ const cmd_t* cmd_find(const char* name) {
                 if (!strcmp(cmd->name, name))
                         return cmd;
         }
-        printf("Command not found: %s\n", name);
+        printf_P(PSTR("Command not found: %s\n"), name);
         return 0;
 }
 
@@ -212,7 +213,7 @@ void cmd_handler() {
         static char line[64];
         static int size = 0;
         if (show_prompt) {
-                printf("%s> ", manual ? "manual" : state_str(state));
+                printf_P(PSTR("%s> "), manual ? "manual" : state_str(state));
                 show_prompt = 0;
         }
         int c = uart_getc();
@@ -233,12 +234,12 @@ void cmd_handler() {
 void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
-        printf("Inputs:\n");
-        printf(TABLE_FORMAT, "Name", "Alias", "Port", "Active");
+        printf_P(PSTR("Inputs:\n"));
+        printf_P(PSTR(TABLE_FORMAT), "Name", "Alias", "Port", "Active");
 #define IN(name, port, bit) \
-        printf(TABLE_FORMAT, #name, "", #port#bit, in.name ? "X" : "");
+        printf_P(PSTR(TABLE_FORMAT), #name, "", #port#bit, in.name ? "X" : "");
 #define IN_ALIAS(name, port, bit, alias) \
-        printf(TABLE_FORMAT, #name, #alias, #port#bit, in.name ? "X" : "");
+        printf_P(PSTR(TABLE_FORMAT), #name, #alias, #port#bit, in.name ? "X" : "");
 #include "config.h"
         putchar('\n');
 }
@@ -246,12 +247,12 @@ void cmd_in(int argc, char* argv[]) {
 void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
-        printf("Outputs:\n");
-        printf(TABLE_FORMAT, "Name", "Alias", "Port", "Active");
+        printf_P(PSTR("Outputs:\n"));
+        printf_P(PSTR(TABLE_FORMAT), "Name", "Alias", "Port", "Active");
 #define OUT(name, port, bit) \
-        printf(TABLE_FORMAT, #name, "", #port#bit, out.name ? "X" : "");
+        printf_P(PSTR(TABLE_FORMAT), #name, "", #port#bit, out.name ? "X" : "");
 #define OUT_ALIAS(name, port, bit, alias) \
-        printf(TABLE_FORMAT, #name, #alias, #port#bit, out.name ? "X" : "");
+        printf_P(PSTR(TABLE_FORMAT), #name, #alias, #port#bit, out.name ? "X" : "");
 #include "config.h"
         putchar('\n');
 }
@@ -290,14 +291,14 @@ void cmd_reset(int argc, char* argv[]) {
 
 void cmd_help(int argc, char* argv[]) {
         if (argc == 1) {
-                printf("List of commands:\n");
+                printf_P(PSTR("List of commands:\n"));
                 for (const cmd_t* cmd = cmd_list; cmd->fn; ++cmd)
-                        printf("  %20s %s\n", cmd->name, cmd->help);
+                        printf_P(PSTR("  %20s %s\n"), cmd->name, cmd->help);
                 putchar('\n');
         } else if (argc == 2) {
                 const cmd_t* cmd = cmd_find(argv[1]);
                 if (cmd)
-                        printf("Usage: %s %s\n%s\n", cmd->name, cmd->args, cmd->help);
+                        printf_P(PSTR("Usage: %s %s\n%s\n"), cmd->name, cmd->args, cmd->help);
         } else {
                 usage();
         }
