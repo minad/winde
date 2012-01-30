@@ -57,6 +57,10 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 const prog_char S_TABLE_FORMAT[] = "%-20S | %-24S | %-4S | %S\n";
 const prog_char S_X[]            = "X";
 const prog_char S_EMPTY[]        = "";
+const prog_char S_NAME[]         = "Name";
+const prog_char S_ALIAS[]        = "Alias";
+const prog_char S_PORT[]         = "Port";
+const prog_char S_ACTIVE[]       = "Active";
 
 const cmd_t cmd_list[] = {
         { cmd_in,      "in",      "",       "Print list of input ports"  },
@@ -238,7 +242,7 @@ void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Inputs:\n"));
-        printf_P(S_TABLE_FORMAT, PSTR("Name"), PSTR("Alias"), PSTR("Port"), PSTR("Active"));
+        printf_P(S_TABLE_FORMAT, S_NAME, S_ALIAS, S_PORT, S_ACTIVE);
 #define IN(name, port, bit) \
         printf_P(S_TABLE_FORMAT, PSTR(#name), S_EMPTY, PSTR(#port#bit), in.name ? S_X : S_EMPTY);
 #define IN_ALIAS(name, port, bit, alias) \
@@ -251,7 +255,7 @@ void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Outputs:\n"));
-        printf_P(S_TABLE_FORMAT, PSTR("Name"), PSTR("Alias"), PSTR("Port"), PSTR("Active"));
+        printf_P(S_TABLE_FORMAT, S_NAME, S_ALIAS, S_PORT, S_ACTIVE);
 #define OUT(name, port, bit) \
         printf_P(S_TABLE_FORMAT, PSTR(#name), S_EMPTY, PSTR(#port#bit), out.name ? S_X : S_EMPTY);
 #define OUT_ALIAS(name, port, bit, alias) \
