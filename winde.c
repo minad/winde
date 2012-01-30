@@ -6,6 +6,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/wdt.h>
 
 #define BAUD           9600
 #define MAX_ARGS       4
@@ -109,6 +110,7 @@ int main() {
         OSCCAL = 0xA1;
         ports_init();
         uart_init();
+        wdt_enable(WDTO_15MS);
         sei();
         print_version();
         for (;;) {
@@ -116,6 +118,7 @@ int main() {
                 state_update();
                 ports_write();
                 cmd_handler();
+                wdt_reset();
         }
         return 0;
 }
@@ -389,7 +392,9 @@ void uart_init() {
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        while (ringbuf_full(uart_txbuf)) {} // wait
+        while (ringbuf_full(uart_txbuf)) {
+                wdt_reset(); // wait, reset watchdog
+        }
         ringbuf_putc(uart_txbuf, c);
         UCSR0B |= (1 << UDRIE);
         return 0;
