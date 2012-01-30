@@ -45,7 +45,7 @@ int  check_manual();
 void print_version();
 void cmd_handler();
 void cmd_exec(char*);
-const cmd_t* cmd_find(const char*);
+const cmd_t* cmd_find(const char*, cmd_t*);
 void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
 void cmd_on_off(int argc, char* argv[]);
@@ -70,11 +70,12 @@ const prog_char S_ACTIVE[]       = "Active";
         const prog_char cmd_##name##_help[] = help;
 #include "config.h"
 
-const cmd_t cmd_list[] = {
+const cmd_t PROGMEM cmd_list[] = {
 #define CMD(name, fn, args, help) { cmd_##fn, cmd_##name##_name, cmd_##name##_args, cmd_##name##_help },
 #include "config.h"
         { 0 }
-}, *current_cmd = 0;
+};
+const cmd_t* current_cmd;
 
 struct {
 #define IN(name, port, bit)              int name : 1;
@@ -174,7 +175,9 @@ void state_update() {
 }
 
 void usage() {
-        printf_P(PSTR("Usage: %S %S\n"), current_cmd->name, current_cmd->args);
+        cmd_t cmd;
+        memcpy_P(&cmd, current_cmd, sizeof (cmd_t));
+        printf_P(PSTR("Usage: %S %S\n"), cmd.name, cmd.args);
 }
 
 int check_manual() {
@@ -195,24 +198,22 @@ void print_version() {
 void cmd_exec(char* line) {
         char *argv[MAX_ARGS];
         int argc;
+        cmd_t cmd;
         for (argc = 0; argc < MAX_ARGS; ++argc) {
                 if (!(argv[argc] = strsep(&line, " \t")) || *argv[argc] == '\0')
                         break;
         }
-        if (argc > 0) {
-                const cmd_t* cmd = cmd_find(argv[0]);
-                if (cmd) {
-                        current_cmd = cmd;
-                        cmd->fn(argc, argv);
-                        current_cmd = 0;
-                }
-        }
+        if (argc > 0 && (current_cmd = cmd_find(argv[0], &cmd)))
+                cmd.fn(argc, argv);
 }
 
-const cmd_t* cmd_find(const char* name) {
-        for (const cmd_t* cmd = cmd_list; cmd->fn; ++cmd) {
+const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
+        for (const cmd_t* p = cmd_list; ; ++p) {
+                memcpy_P(cmd, p, sizeof (cmd_t));
+                if (!cmd->fn)
+                        break;
                 if (!strcmp_P(name, cmd->name))
-                        return cmd;
+                        return p;
         }
         printf_P(PSTR("Command not found: %s\n"), name);
         return 0;
@@ -299,15 +300,19 @@ void cmd_reset(int argc, char* argv[]) {
 }
 
 void cmd_help(int argc, char* argv[]) {
+        cmd_t cmd;
         if (argc == 1) {
                 printf_P(PSTR("List of commands:\n"));
-                for (const cmd_t* cmd = cmd_list; cmd->fn; ++cmd)
-                        printf_P(PSTR("  %20S %S\n"), cmd->name, cmd->help);
+                for (const cmd_t* p = cmd_list;; ++p) {
+                        memcpy_P(&cmd, p, sizeof (cmd_t));
+                        if (!cmd.fn)
+                                break;
+                        printf_P(PSTR("  %20S %S\n"), cmd.name, cmd.help);
+                }
                 putchar('\n');
         } else if (argc == 2) {
-                const cmd_t* cmd = cmd_find(argv[1]);
-                if (cmd)
-                        printf_P(PSTR("Usage: %S %S\n%S\n"), cmd->name, cmd->args, cmd->help);
+                if (cmd_find(argv[1], &cmd))
+                        printf_P(PSTR("Usage: %S %S\n%S\n"), cmd.name, cmd.args, cmd.help);
         } else {
                 usage();
         }
