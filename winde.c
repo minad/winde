@@ -7,10 +7,11 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
-#define UART_BAUD_RATE 9600
+#define BAUD           9600
 #define MAX_ARGS       4
 #define RINGBUF_RXSIZE 32
 #define RINGBUF_TXSIZE 64
+#define LINE_SIZE      64
 
 typedef struct {
         int8_t read, write, size;
@@ -36,7 +37,7 @@ int        ringbuf_empty(ringbuf_t* rb);
 int        ringbuf_putc(ringbuf_t* rb, char c);
 int        ringbuf_getc(ringbuf_t* rb);
 
-void uart_init(uint32_t baud);
+void uart_init();
 int  uart_putchar(char c, FILE* fp);
 int  uart_getc();
 
@@ -107,7 +108,7 @@ enum {
 int main() {
         OSCCAL = 0xA1;
         ports_init();
-        uart_init(UART_BAUD_RATE);
+        uart_init();
         sei();
         print_version();
         for (;;) {
@@ -225,7 +226,7 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
 }
 
 void cmd_handler() {
-        static char line[64];
+        static char line[LINE_SIZE];
         static int size = 0;
         if (show_prompt) {
                 printf_P(PSTR("%S> "), manual ? PSTR("manual") : state_str(state));
@@ -362,12 +363,15 @@ int ringbuf_getc(ringbuf_t* rb) {
         return c;
 }
 
-void uart_init(uint32_t baud) {
-        baud = F_CPU / (baud * 16) - 1;
-
-        // Set baud rate
-        UBRR0H = baud >> 8;
-        UBRR0L = baud & 0xFF;
+void uart_init() {
+#include <util/setbaud.h>
+        UBRR0H = UBRRH_VALUE;
+        UBRR0L = UBRRL_VALUE;
+#if USE_2X
+        UCSR0A |= (1 << U2X);
+#else
+        UCSR0A &= ~(1 << U2X);
+#endif
 
         // set frame format: 8 bit, no parity, 1 stop bit
         UCSR0C = (1 << UCSZ1) | (1 << UCSZ0);
