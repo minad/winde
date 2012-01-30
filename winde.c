@@ -31,7 +31,7 @@ inline void ports_write();
 
 void state_update();
 const char* state_str(char);
-void state_set(char);
+void state_transition(char);
 
 ringbuf_t* ringbuf_init(void* buf, int8_t size);
 inline int ringbuf_full(ringbuf_t* rb);
@@ -156,9 +156,9 @@ const char* state_str(char state) {
         }
 }
 
-void state_set(char s) {
-        state = s;
-        printf_P(PSTR("\nState %S\n"), state_str(state));
+void state_transition(char new_state) {
+        printf_P(PSTR("\n%S -> %S\n"), state_str(state), state_str(new_state));
+        state = new_state;
         show_prompt = 1;
 }
 
@@ -178,9 +178,9 @@ void state_update() {
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
 
 #define TRANPSTR_ACTION(initial, event, final, attrs, act) \
-        if (state == STATE_##initial && (event)) { state_set(STATE_##final); action_##act(); return; }
+        if (state == STATE_##initial && (event)) { state_transition(STATE_##final); action_##act(); return; }
 #define TRANS(initial, event, final, attrs) \
-        if (state == STATE_##initial && (event)) { state_set(STATE_##final); return; }
+        if (state == STATE_##initial && (event)) { state_transition(STATE_##final); return; }
 #include "config.h"
 }
 
