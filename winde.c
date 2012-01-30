@@ -24,58 +24,60 @@ typedef struct {
         const char *name, *args, *help;
 } cmd_t;
 
-inline void ports_init();
-void ports_reset();
-inline void ports_read();
-inline void ports_write();
+inline void  ports_init();
+void         ports_reset();
+inline void  ports_read();
+inline void  ports_write();
 
-void state_update();
-const char* state_str(char);
-void state_transition(char);
+void         state_update();
+const char*  state_str(char);
+void         state_transition(char);
 
-ringbuf_t* ringbuf_init(void* buf, int8_t size);
-inline int ringbuf_full(ringbuf_t* rb);
-inline int ringbuf_empty(ringbuf_t* rb);
-int        ringbuf_putc(ringbuf_t* rb, char c);
-int        ringbuf_getc(ringbuf_t* rb);
+ringbuf_t*   ringbuf_init(void* buf, int8_t size);
+inline int   ringbuf_full(ringbuf_t* rb);
+inline int   ringbuf_empty(ringbuf_t* rb);
+int          ringbuf_putc(ringbuf_t* rb, char c);
+int          ringbuf_getc(ringbuf_t* rb);
 
-inline void uart_init();
-int  uart_putchar(char c, FILE* fp);
-inline int uart_getc();
+inline void  uart_init();
+int          uart_putchar(char c, FILE* fp);
+inline int   uart_getc();
 
-void usage();
-int  check_manual();
-void print_version();
-void cmd_handler();
-inline void cmd_exec(char*);
+void         usage();
+int          check_manual();
+void         print_version();
+void         cmd_handler();
+inline void  cmd_exec(char*);
 const cmd_t* cmd_find(const char*, cmd_t*);
-void cmd_in(int argc, char* argv[]);
-void cmd_out(int argc, char* argv[]);
-void cmd_on_off(int argc, char* argv[]);
-void cmd_mode(int argc, char* argv[]);
-void cmd_reset(int argc, char* argv[]);
-void cmd_help(int argc, char* argv[]);
-void cmd_version(int argc, char* argv[]);
+void         cmd_in(int argc, char* argv[]);
+void         cmd_out(int argc, char* argv[]);
+void         cmd_on_off(int argc, char* argv[]);
+void         cmd_mode(int argc, char* argv[]);
+void         cmd_reset(int argc, char* argv[]);
+void         cmd_help(int argc, char* argv[]);
+void         cmd_version(int argc, char* argv[]);
 
 ringbuf_t *uart_rxbuf, *uart_txbuf;
 
-const prog_char PSTR_TABLE_FORMAT[] = "%-20S | %-24S | %-4S | %S\n";
-const prog_char PSTR_X[]            = "X";
-const prog_char PSTR_EMPTY[]        = "";
-const prog_char PSTR_NAME[]         = "Name";
-const prog_char PSTR_ALIAS[]        = "Alias";
-const prog_char PSTR_PORT[]         = "Port";
-const prog_char PSTR_ACTIVE[]       = "Active";
+#define DEF_PSTR(name, str) const prog_char PSTR_##name[] = str;
+
+DEF_PSTR(TABLE_FORMAT, "%-20S | %-24S | %-4S | %S\n")
+DEF_PSTR(X,            "X")
+DEF_PSTR(EMPTY,        "")
+DEF_PSTR(NAME,         "Name")
+DEF_PSTR(ALIAS,        "Alias")
+DEF_PSTR(PORT,         "Port")
+DEF_PSTR(ACTIVE,       "Active")
 
 #define CMD(name, fn, args, help) \
-        const prog_char PSTR_cmd_##name##_name[] = #name; \
-        const prog_char PSTR_cmd_##name##_args[] = args; \
-        const prog_char PSTR_cmd_##name##_help[] = help;
+        DEF_PSTR(cmd_##name##_name, #name) \
+        DEF_PSTR(cmd_##name##_args, args)  \
+        DEF_PSTR(cmd_##name##_help, help)
 #define OUT(name, port, bit) \
-        const prog_char PSTR_out_##name##_name[] = #name;
+        DEF_PSTR(out_##name##_name, #name)
 #define OUT_ALIAS(name, port, bit, alias) \
-        const prog_char PSTR_out_##name##_name[] = #name; \
-        const prog_char PSTR_out_##name##_alias[] = #alias;
+        DEF_PSTR(out_##name##_name, #name) \
+        DEF_PSTR(out_##name##_alias, #alias)
 #include "config.h"
 
 const cmd_t PROGMEM cmd_list[] = {
