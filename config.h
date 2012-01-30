@@ -25,6 +25,9 @@
 #ifndef TRANS_ACTION
 #  define TRANS_ACTION(initial, event, final, attrs, action)
 #endif
+#ifndef CMD
+#  define CMD(name, fn, args, help)
+#endif
 
 #include "config"
 
@@ -37,3 +40,4 @@
 #undef EVENT
 #undef TRANS
 #undef TRANS_ACTION
+#undef CMD

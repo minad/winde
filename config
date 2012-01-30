@@ -96,3 +96,14 @@ TRANS_ACTION (links_eingekuppelt,  !aufbau_ok,                     motor_an_fehl
 TRANS_ACTION (rechts_eingekuppelt, !aufbau_ok,                     motor_an_fehler,     (RED),              auskuppeln)
 TRANS        (motor_an_fehler,     aufbau_ok,                      motor_an,            ())
 TRANS        (motor_an_fehler,     !in.motor_an,                   temp_ok,             (RED))
+
+// Kommandos der Debug-Schnittstelle
+//  (Name,    Funktion, Argumente, Hilfe)
+CMD (in,      in,       "",        "Print list of input ports")
+CMD (out,     out,      "",        "Print list of output ports")
+CMD (on,      on_off,   "<port>",  "Set port on")
+CMD (off,     on_off,   "<port>",  "Set port off")
+CMD (mode,    mode,     "[a|m]",   "Set automatic/manual mode")
+CMD (reset,   reset,    "",        "Reset system")
+CMD (help,    help,     "[cmd]",   "Print this help")
+CMD (version, version,  "",        "Print version")

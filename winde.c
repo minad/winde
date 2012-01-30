@@ -17,7 +17,7 @@ typedef struct {
 
 typedef struct {
         void (*fn)(int, char*[]);
-        char *name, *args, *help;
+        const char *name, *args, *help;
 } cmd_t;
 
 void ports_init();
@@ -62,16 +62,16 @@ const prog_char S_ALIAS[]        = "Alias";
 const prog_char S_PORT[]         = "Port";
 const prog_char S_ACTIVE[]       = "Active";
 
+#define CMD(name, fn, args, help) \
+        const prog_char cmd_##name##_name[] = #name; \
+        const prog_char cmd_##name##_args[] = args; \
+        const prog_char cmd_##name##_help[] = help;
+#include "config.h"
+
 const cmd_t cmd_list[] = {
-        { cmd_in,      "in",      "",       "Print list of input ports"  },
-        { cmd_out,     "out",     "",       "Print list of output ports" },
-        { cmd_on_off,  "on",      "<port>", "Set port on"                },
-        { cmd_on_off,  "off",     "<port>", "Set port off"               },
-        { cmd_mode,    "mode",    "[a|m]",  "Set automatic/manual mode"  },
-        { cmd_reset,   "reset",   "",       "Reset system"               },
-        { cmd_help,    "help",    "[cmd]",  "Print this help"            },
-        { cmd_version, "version", "",       "Print version"              },
-        { 0,                                                             },
+#define CMD(name, fn, args, help) { cmd_##fn, cmd_##name##_name, cmd_##name##_args, cmd_##name##_help },
+#include "config.h"
+        { 0 }
 }, *current_cmd = 0;
 
 struct {
@@ -172,7 +172,7 @@ void state_update() {
 }
 
 void usage() {
-        printf_P(PSTR("Usage: %s %s\n"), current_cmd->name, current_cmd->args);
+        printf_P(PSTR("Usage: %S %S\n"), current_cmd->name, current_cmd->args);
 }
 
 int check_manual() {
@@ -209,7 +209,7 @@ void cmd_exec(char* line) {
 
 const cmd_t* cmd_find(const char* name) {
         for (const cmd_t* cmd = cmd_list; cmd->fn; ++cmd) {
-                if (!strcmp(cmd->name, name))
+                if (!strcmp_P(name, cmd->name))
                         return cmd;
         }
         printf_P(PSTR("Command not found: %s\n"), name);
@@ -300,12 +300,12 @@ void cmd_help(int argc, char* argv[]) {
         if (argc == 1) {
                 printf_P(PSTR("List of commands:\n"));
                 for (const cmd_t* cmd = cmd_list; cmd->fn; ++cmd)
-                        printf_P(PSTR("  %20s %s\n"), cmd->name, cmd->help);
+                        printf_P(PSTR("  %20S %S\n"), cmd->name, cmd->help);
                 putchar('\n');
         } else if (argc == 2) {
                 const cmd_t* cmd = cmd_find(argv[1]);
                 if (cmd)
-                        printf_P(PSTR("Usage: %s %s\n%s\n"), cmd->name, cmd->args, cmd->help);
+                        printf_P(PSTR("Usage: %S %S\n%S\n"), cmd->name, cmd->args, cmd->help);
         } else {
                 usage();
         }
