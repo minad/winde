@@ -24,29 +24,30 @@ typedef struct {
         const char *name, *args, *help;
 } cmd_t;
 
-void ports_init();
+inline void ports_init();
 void ports_reset();
-void ports_read();
-void ports_write();
+inline void ports_read();
+inline void ports_write();
+
 void state_update();
 const char* state_str(char);
 void state_set(char);
 
 ringbuf_t* ringbuf_init(void* buf, int8_t size);
-int        ringbuf_full(ringbuf_t* rb);
-int        ringbuf_empty(ringbuf_t* rb);
+inline int ringbuf_full(ringbuf_t* rb);
+inline int ringbuf_empty(ringbuf_t* rb);
 int        ringbuf_putc(ringbuf_t* rb, char c);
 int        ringbuf_getc(ringbuf_t* rb);
 
-void uart_init();
+inline void uart_init();
 int  uart_putchar(char c, FILE* fp);
-int  uart_getc();
+inline int uart_getc();
 
 void usage();
 int  check_manual();
 void print_version();
 void cmd_handler();
-void cmd_exec(char*);
+inline void cmd_exec(char*);
 const cmd_t* cmd_find(const char*, cmd_t*);
 void cmd_in(int argc, char* argv[]);
 void cmd_out(int argc, char* argv[]);
@@ -103,7 +104,7 @@ enum {
 #include "config.h"
 };
 
-#define ACTION(name, code) static inline void action_##name() { code }
+#define ACTION(name, code) inline void action_##name() { code }
 #include "config.h"
 
 int main() {
@@ -123,7 +124,7 @@ int main() {
         return 0;
 }
 
-void ports_init() {
+inline void ports_init() {
         ports_reset();
 
 #define OUT(name, port, bit) DDR ## port |= (1 << bit);
@@ -135,12 +136,12 @@ void ports_reset() {
 #include "config.h"
 }
 
-void ports_read() {
+inline void ports_read() {
 #define IN(name, port, bit) in.name = (PIN ## port >> bit) & 1;
 #include "config.h"
 }
 
-void ports_write() {
+inline void ports_write() {
 #define OUT(name, port, bit) \
         if (out.name) { PORT ## port |= (1 << bit); } \
         else { PORT ## port &= ~(1 << bit); }
@@ -204,7 +205,7 @@ void print_version() {
                       "  Software:      Daniel 'Teilchen' Mendler\n\n"));
 }
 
-void cmd_exec(char* line) {
+inline void cmd_exec(char* line) {
         char *argv[MAX_ARGS];
         int argc;
         cmd_t cmd;
@@ -341,11 +342,11 @@ ringbuf_t* ringbuf_init(void* buf, int8_t size) {
 	return rb;
 }
 
-int ringbuf_full(ringbuf_t* rb) {
+inline int ringbuf_full(ringbuf_t* rb) {
         return (rb->read == (rb->write + 1) % rb->size);
 }
 
-int ringbuf_empty(ringbuf_t* rb) {
+inline int ringbuf_empty(ringbuf_t* rb) {
         return (rb->read == rb->write);
 }
 
@@ -401,7 +402,7 @@ int uart_putchar(char c, FILE* fp) {
         return 0;
 }
 
-int uart_getc() {
+inline int uart_getc() {
         return ringbuf_getc(uart_rxbuf);
 }
 
