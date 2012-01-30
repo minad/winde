@@ -14,6 +14,8 @@
 #define RINGBUF_TXSIZE 64
 #define LINE_SIZE      64
 
+#define NELEM(a) (sizeof (a) / sizeof (a[0]))
+
 typedef struct {
         int8_t read, write, size;
         char   buf[0];
@@ -83,7 +85,6 @@ DEF_PSTR(ACTIVE,       "Active")
 const cmd_t PROGMEM cmd_list[] = {
 #define CMD(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
 #include "config.h"
-        { 0 }
 };
 const cmd_t* current_cmd;
 
@@ -220,12 +221,10 @@ inline void cmd_exec(char* line) {
 }
 
 const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
-        for (const cmd_t* p = cmd_list; ; ++p) {
-                memcpy_P(cmd, p, sizeof (cmd_t));
-                if (!cmd->fn)
-                        break;
+        for (int i = 0; i < NELEM(cmd_list); ++i) {
+                memcpy_P(cmd, cmd_list + i, sizeof (cmd_t));
                 if (!strcmp_P(name, cmd->name))
-                        return p;
+                        return cmd_list + i;
         }
         printf_P(PSTR("Command not found: %s\n"), name);
         return 0;
@@ -316,10 +315,8 @@ void cmd_help(int argc, char* argv[]) {
         cmd_t cmd;
         if (argc == 1) {
                 printf_P(PSTR("List of commands:\n"));
-                for (const cmd_t* p = cmd_list;; ++p) {
-                        memcpy_P(&cmd, p, sizeof (cmd_t));
-                        if (!cmd.fn)
-                                break;
+                for (int i = 0; i < NELEM(cmd_list); ++i) {
+                        memcpy_P(&cmd, cmd_list + i, sizeof (cmd_t));
                         printf_P(PSTR("  %20S %S\n"), cmd.name, cmd.help);
                 }
                 putchar('\n');
