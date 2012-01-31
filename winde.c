@@ -75,9 +75,7 @@ DEF_PSTR(ACTIVE,       "Active")
         DEF_PSTR(cmd_##name##_name, #name) \
         DEF_PSTR(cmd_##name##_args, args)  \
         DEF_PSTR(cmd_##name##_help, help)
-#define OUT(name, port, bit) \
-        DEF_PSTR(out_##name##_name, #name)
-#define OUT_ALIAS(name, port, bit, alias) \
+#define OUT(name, port, bit, alias) \
         DEF_PSTR(out_##name##_name, #name) \
         DEF_PSTR(out_##name##_alias, #alias)
 #include "config.h"
@@ -90,24 +88,22 @@ const cmd_t* current_cmd;
 
 union {
         struct {
-#define IN(name, port, bit) int name : 1;
+#define IN(name, port, bit, alias) int name : 1;
 #include "config.h"
         };
         struct {
-#define IN(name, port, bit)              int : 1;
-#define IN_ALIAS(name, port, bit, alias) int alias : 1;
+#define IN(name, port, bit, alias) int alias : 1;
 #include "config.h"
         };
 } in;
 
 union {
         struct {
-#define OUT(name, port, bit) int name : 1;
+#define OUT(name, port, bit, alias) int name : 1;
 #include "config.h"
         };
         struct {
-#define OUT(name, port, bit)              int : 1;
-#define OUT_ALIAS(name, port, bit, alias) int alias : 1;
+#define OUT(name, port, bit, alias) int alias : 1;
 #include "config.h"
         };
 } out;
@@ -140,22 +136,22 @@ int main() {
 }
 
 inline void ports_init() {
-#define OUT(name, port, bit) DDR ## port |= (1 << bit);
+#define OUT(name, port, bit, alias) DDR ## port |= (1 << bit);
 #include "config.h"
 }
 
 void ports_reset() {
-#define OUT(name, port, bit) out.name = 0;
+#define OUT(name, port, bit, alias) out.name = 0;
 #include "config.h"
 }
 
 inline void ports_read() {
-#define IN(name, port, bit) in.name = (PIN ## port >> bit) & 1;
+#define IN(name, port, bit, alias) in.name = (PIN ## port >> bit) & 1;
 #include "config.h"
 }
 
 inline void ports_write() {
-#define OUT(name, port, bit) \
+#define OUT(name, port, bit, alias) \
         if (out.name) { PORT ## port |= (1 << bit); } \
         else { PORT ## port &= ~(1 << bit); }
 #include "config.h"
@@ -267,9 +263,7 @@ void cmd_in(int argc, char* argv[]) {
                 return usage();
         printf_P(PSTR("Inputs:\n"));
         printf_P(PSTR_TABLE_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
-#define IN(name, port, bit) \
-        printf_P(PSTR_TABLE_FORMAT, PSTR(#name), PSTR_EMPTY, PSTR(#port#bit), in.name ? PSTR_X : PSTR_EMPTY);
-#define IN_ALIAS(name, port, bit, alias) \
+#define IN(name, port, bit, alias) \
         printf_P(PSTR_TABLE_FORMAT, PSTR(#name), PSTR(#alias), PSTR(#port#bit), in.name ? PSTR_X : PSTR_EMPTY);
 #include "config.h"
         putchar('\n');
@@ -280,9 +274,7 @@ void cmd_out(int argc, char* argv[]) {
                 return usage();
         printf_P(PSTR("Outputs:\n"));
         printf_P(PSTR_TABLE_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
-#define OUT(name, port, bit) \
-        printf_P(PSTR_TABLE_FORMAT, PSTR_out_##name##_name, PSTR_EMPTY, PSTR(#port#bit), out.name ? PSTR_X : PSTR_EMPTY);
-#define OUT_ALIAS(name, port, bit, alias) \
+#define OUT(name, port, bit, alias) \
         printf_P(PSTR_TABLE_FORMAT, PSTR_out_##name##_name, PSTR_out_##name##_alias, PSTR(#port#bit), out.name ? PSTR_X : PSTR_EMPTY);
 #include "config.h"
         putchar('\n');
@@ -293,11 +285,10 @@ void cmd_on_off(int argc, char* argv[]) {
                 return usage();
         if (check_manual()) {
                 int on = strcmp_P(argv[0], PSTR("on")) ? 0 : 1;
-#define OUT(name, port, bit) \
-                if (!strcmp_P(argv[1], PSTR_out_##name##_name)) { out.name = on; return; }
-#define OUT_ALIAS(name, port, bit, alias) \
+#define OUT(name, port, bit, alias) \
                 if (!strcmp_P(argv[1], PSTR_out_##name##_name) || \
-                    !strcmp_P(argv[1], PSTR_out_##name##_alias)) { out.name = on; return; }
+                    (sizeof (#alias) != 1 && !strcmp_P(argv[1], PSTR_out_##name##_alias))) \
+                { out.name = on; return; }
 #include "config.h"
         }
 }

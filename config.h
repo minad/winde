@@ -1,14 +1,8 @@
-#ifndef OUT_ALIAS
-#  define OUT_ALIAS(name, port, bit, alias) OUT(name, port, bit)
-#endif
 #ifndef OUT
-#  define OUT(name, port, bit)
-#endif
-#ifndef IN_ALIAS
-#  define IN_ALIAS(name, port, bit, alias) IN(name, port, bit)
+#  define OUT(name, port, bit, alias)
 #endif
 #ifndef IN
-#  define IN(name, port, bit)
+#  define IN(name, port, bit, alias)
 #endif
 #ifndef STATE
 #  define STATE(name, attrs)
