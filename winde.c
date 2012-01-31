@@ -88,16 +88,28 @@ const cmd_t PROGMEM cmd_list[] = {
 };
 const cmd_t* current_cmd;
 
-struct {
-#define IN(name, port, bit)              int name : 1;
-#define IN_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
+union {
+        struct {
+#define IN(name, port, bit) int name : 1;
 #include "config.h"
+        };
+        struct {
+#define IN(name, port, bit)              int : 1;
+#define IN_ALIAS(name, port, bit, alias) int alias : 1;
+#include "config.h"
+        };
 } in;
 
-struct {
-#define OUT(name, port, bit)              int name : 1;
-#define OUT_ALIAS(name, port, bit, alias) union { int name : 1; int alias : 1; };
+union {
+        struct {
+#define OUT(name, port, bit) int name : 1;
 #include "config.h"
+        };
+        struct {
+#define OUT(name, port, bit)              int : 1;
+#define OUT_ALIAS(name, port, bit, alias) int alias : 1;
+#include "config.h"
+        };
 } out;
 
 char manual = 1, state = 0, show_prompt = 1;
