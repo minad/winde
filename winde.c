@@ -7,6 +7,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
+#include <avr/eeprom.h>
 #include "pp.h"
 
 #define BAUD           9600
@@ -46,6 +47,9 @@ inline void  uart_init();
 int          uart_putchar(char c, FILE* fp);
 inline int   uart_getc();
 
+inline void  counter_load();
+inline void  counter_save();
+
 void         usage();
 int          check_manual();
 void         print_version();
@@ -57,6 +61,7 @@ void         cmd_out(int argc, char* argv[]);
 void         cmd_on_off(int argc, char* argv[]);
 void         cmd_mode(int argc, char* argv[]);
 void         cmd_reset(int argc, char* argv[]);
+void         cmd_counter(int argc, char* argv[]);
 void         cmd_help(int argc, char* argv[]);
 void         cmd_version(int argc, char* argv[]);
 
@@ -64,13 +69,14 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 
 #define DEF_PSTR(name, str) const prog_char PSTR_##name[] = str;
 
-DEF_PSTR(TABLE_FORMAT, "%-20S | %-24S | %-4S | %S\n")
-DEF_PSTR(X,            "X")
-DEF_PSTR(EMPTY,        "")
-DEF_PSTR(NAME,         "Name")
-DEF_PSTR(ALIAS,        "Alias")
-DEF_PSTR(PORT,         "Port")
-DEF_PSTR(ACTIVE,       "Active")
+DEF_PSTR(IO_FORMAT,      "%-20S | %-24S | %-4S | %S\n")
+DEF_PSTR(COUNTER_FORMAT, "%-20S | %S\n")
+DEF_PSTR(X,              "X")
+DEF_PSTR(EMPTY,          "")
+DEF_PSTR(NAME,           "Name")
+DEF_PSTR(ALIAS,          "Alias")
+DEF_PSTR(PORT,           "Port")
+DEF_PSTR(ACTIVE,         "Active")
 
 #define COMMAND(name, fn, args, help) \
         DEF_PSTR(cmd_##name##_name, #name) \
@@ -89,7 +95,7 @@ const cmd_t* current_cmd;
 
 union {
         struct {
-#define IN(name, port, bit, alias) uint8_t name : 1;
+#define IN(name, port, bit, alias) uint8_t name  : 1;
 #include "config.h"
         };
         struct {
@@ -100,7 +106,7 @@ union {
 
 union {
         struct {
-#define OUT(name, port, bit, alias) uint8_t name : 1;
+#define OUT(name, port, bit, alias) uint8_t name  : 1;
 #include "config.h"
         };
         struct {
@@ -108,6 +114,14 @@ union {
 #include "config.h"
         };
 } out;
+
+typedef struct {
+#define COUNTER(name) uint32_t name;
+#include "config.h"
+} counter_t;
+
+counter_t EEMEM counter_eeprom;
+counter_t counter, counter_old;
 
 uint8_t manual = 1, state = 0, show_prompt = 1;
 
@@ -123,17 +137,31 @@ int main() {
         OSCCAL = 0xA1;
         ports_init();
         uart_init();
-        wdt_enable(WDTO_15MS);
+        wdt_enable(WDTO_500MS);
         sei();
         print_version();
+        counter_load();
         for (;;) {
                 ports_read();
                 state_update();
                 ports_write();
                 cmd_handler();
+                counter_save();
                 wdt_reset();
         }
         return 0;
+}
+
+inline void counter_load() {
+#define COUNTER(name) counter.name = counter_old.name = eeprom_read_dword(&counter_eeprom.name);
+#include "config.h"
+}
+
+inline void counter_save() {
+#define COUNTER(name) \
+                if (counter_old.name != counter.name) \
+                { eeprom_write_dword(&counter_eeprom.name, counter.name); counter_old.name = counter.name; }
+#include "config.h"
 }
 
 inline void ports_init() {
@@ -261,9 +289,9 @@ void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Inputs:\n"));
-        printf_P(PSTR_TABLE_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
+        printf_P(PSTR_IO_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
 #define IN(name, port, bit, alias) \
-        printf_P(PSTR_TABLE_FORMAT, PSTR(#name), IF_EMPTY(alias, PSTR_EMPTY, PSTR(#alias)), PSTR(#port#bit), in.name ? PSTR_X : PSTR_EMPTY);
+        printf_P(PSTR_IO_FORMAT, PSTR(#name), IF_EMPTY(alias, PSTR_EMPTY, PSTR(#alias)), PSTR(#port#bit), in.name ? PSTR_X : PSTR_EMPTY);
 #include "config.h"
         putchar('\n');
 }
@@ -272,9 +300,9 @@ void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Outputs:\n"));
-        printf_P(PSTR_TABLE_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
+        printf_P(PSTR_IO_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
 #define OUT(name, port, bit, alias) \
-        printf_P(PSTR_TABLE_FORMAT, PSTR_out_##name##_name, IF_EMPTY(alias, PSTR_EMPTY, PSTR_out_##name##_alias), PSTR(#port#bit), out.name ? PSTR_X : PSTR_EMPTY);
+        printf_P(PSTR_IO_FORMAT, PSTR_out_##name##_name, IF_EMPTY(alias, PSTR_EMPTY, PSTR_out_##name##_alias), PSTR(#port#bit), out.name ? PSTR_X : PSTR_EMPTY);
 #include "config.h"
         putchar('\n');
 }
@@ -309,6 +337,17 @@ void cmd_reset(int argc, char* argv[]) {
                 return usage();
         if (check_manual())
                 ports_reset();
+}
+
+void cmd_counter(int argc, char* argv[]) {
+        if (argc != 1)
+                return usage();
+        printf_P(PSTR("Counter:\n"));
+        printf_P(PSTR_COUNTER_FORMAT, PSTR_NAME, PSTR("Value"));
+#define STAT(name) \
+        printf_P(PSTR_COUNTER_FORMAT, PSTR(#name), counter.name);
+#include "config.h"
+        putchar('\n');
 }
 
 void cmd_help(int argc, char* argv[]) {
