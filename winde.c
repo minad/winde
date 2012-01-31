@@ -33,8 +33,8 @@ inline void  ports_read();
 inline void  ports_write();
 
 void         state_update();
-const char*  state_str(char);
-void         state_transition(char);
+const char*  state_str(int8_t);
+void         state_transition(int8_t);
 
 ringbuf_t*   ringbuf_init(void* buf, int8_t size);
 inline int   ringbuf_full(ringbuf_t* rb);
@@ -89,27 +89,27 @@ const cmd_t* current_cmd;
 
 union {
         struct {
-#define IN(name, port, bit, alias) int name : 1;
+#define IN(name, port, bit, alias) uint8_t name : 1;
 #include "config.h"
         };
         struct {
-#define IN(name, port, bit, alias) int alias : 1;
+#define IN(name, port, bit, alias) uint8_t alias : 1;
 #include "config.h"
         };
 } in;
 
 union {
         struct {
-#define OUT(name, port, bit, alias) int name : 1;
+#define OUT(name, port, bit, alias) uint8_t name : 1;
 #include "config.h"
         };
         struct {
-#define OUT(name, port, bit, alias) int alias : 1;
+#define OUT(name, port, bit, alias) uint8_t alias : 1;
 #include "config.h"
         };
 } out;
 
-char manual = 1, state = 0, show_prompt = 1;
+int8_t manual = 1, state = 0, show_prompt = 1;
 
 enum {
 #define STATE(name, attrs) STATE_##name,
@@ -159,7 +159,7 @@ inline void ports_write() {
 #include "config.h"
 }
 
-const char* state_str(char state) {
+const char* state_str(int8_t state) {
         switch (state) {
 #define STATE(name, attrs) case STATE_##name: return PSTR(#name);
 #include "config.h"
@@ -167,7 +167,7 @@ const char* state_str(char state) {
         }
 }
 
-void state_transition(char new_state) {
+void state_transition(int8_t new_state) {
         printf_P(PSTR("\n%S -> %S\n"), state_str(state), state_str(new_state));
         state = new_state;
         show_prompt = 1;
