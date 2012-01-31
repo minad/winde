@@ -167,10 +167,10 @@ int main() {
         OSCCAL = 0xA1;
         ports_init();
         uart_init();
-        wdt_enable(WDTO_500MS);
         sei();
-        print_version();
         counter_load();
+        wdt_enable(WDTO_500MS);
+        print_version();
         for (;;) {
                 ports_read();
                 state_update();
