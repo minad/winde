@@ -18,7 +18,7 @@
 
 #define NELEM(a) (sizeof (a) / sizeof (a[0]))
 // inline can be commented out to check function size with avr-nm
-#define INLINE  //inline
+#define INLINE   inline
 
 typedef volatile struct {
         uint8_t read, write, size;
@@ -88,7 +88,7 @@ DEF_PSTR(ACTIVE,         "Active")
 
 #define COMMAND(name, fn, args, help) \
         DEF_PSTR(cmd_##name##_name, #name) \
-        DEF_PSTR(cmd_##name##_args, args)  \
+        DEF_PSTR(cmd_##name##_args, args) \
         DEF_PSTR(cmd_##name##_help, help)
 #define OUT(name, port, bit, alias) \
         DEF_PSTR(out_##name##_name, #name) \
