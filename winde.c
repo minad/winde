@@ -28,10 +28,15 @@ typedef struct {
         const char *name, *args, *help;
 } cmd_t;
 
+typedef struct {
+        const char *name, *alias, *port;
+} port_t;
+
 inline void  ports_init();
 void         ports_reset();
 inline void  ports_read();
 inline void  ports_write();
+void         ports_print(const port_t* ports, const void* bitset, int n);
 
 void         state_update();
 const char*  state_str(uint8_t);
@@ -70,7 +75,7 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 
 #define DEF_PSTR(name, str) const prog_char PSTR_##name[] = str;
 
-DEF_PSTR(IO_FORMAT,      "%-20S | %-24S | %-4S | %S\n")
+DEF_PSTR(PORT_FORMAT,    "%-20S | %-24S | %-4S | %S\n")
 DEF_PSTR(COUNTER_FORMAT, "%-20S | %S\n")
 DEF_PSTR(X,              "X")
 DEF_PSTR(EMPTY,          "")
@@ -85,7 +90,12 @@ DEF_PSTR(ACTIVE,         "Active")
         DEF_PSTR(cmd_##name##_help, help)
 #define OUT(name, port, bit, alias) \
         DEF_PSTR(out_##name##_name, #name) \
-        IF_EMPTY(alias, , DEF_PSTR(out_##name##_alias, #alias))
+        DEF_PSTR(out_##name##_port, #port#bit) \
+        IF_EMPTY(alias,, DEF_PSTR(out_##name##_alias, #alias))
+#define IN(name, port, bit, alias) \
+        DEF_PSTR(in_##name##_name, #name) \
+        DEF_PSTR(in_##name##_port, #port#bit) \
+        IF_EMPTY(alias,, DEF_PSTR(in_##name##_alias, #alias))
 #include "config.h"
 
 const cmd_t PROGMEM cmd_list[] = {
@@ -115,6 +125,18 @@ union {
 #include "config.h"
         };
 } out;
+
+const port_t PROGMEM in_list[] = {
+#define IN(name, port, bit, alias) \
+        { PSTR_in_##name##_name, IF_EMPTY(alias, 0, PSTR_in_##name##_alias), PSTR_in_##name##_port },
+#include "config.h"
+};
+
+const port_t PROGMEM out_list[] = {
+#define OUT(name, port, bit, alias) \
+        { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), PSTR_out_##name##_port },
+#include "config.h"
+};
 
 typedef struct {
 #define COUNTER(name) uint32_t name;
@@ -282,38 +304,50 @@ inline void cmd_handler() {
         }
 }
 
+void ports_print(const port_t* port_list, const void* bitset, int n) {
+        const uint8_t* bits = (const uint8_t*)bitset;
+        printf_P(PSTR_PORT_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
+        for (int i = 0; i < n; ++i) {
+                port_t port;
+                memcpy_P(&port, port_list + i, sizeof (port_t));
+                printf_P(PSTR_PORT_FORMAT, port.name, port.alias ? port.alias : PSTR_EMPTY,
+                         port.port, (bits[i / 8] & (1 << (i % 8))) ? PSTR_X : PSTR_EMPTY);
+        }
+        putchar('\n');
+}
+
 void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Inputs:\n"));
-        printf_P(PSTR_IO_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
-#define IN(name, port, bit, alias) \
-        printf_P(PSTR_IO_FORMAT, PSTR(#name), IF_EMPTY(alias, PSTR_EMPTY, PSTR(#alias)), PSTR(#port#bit), in.name ? PSTR_X : PSTR_EMPTY);
-#include "config.h"
-        putchar('\n');
+        ports_print(in_list, &in, NELEM(in_list));
 }
 
 void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Outputs:\n"));
-        printf_P(PSTR_IO_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
-#define OUT(name, port, bit, alias) \
-        printf_P(PSTR_IO_FORMAT, PSTR_out_##name##_name, IF_EMPTY(alias, PSTR_EMPTY, PSTR_out_##name##_alias), PSTR(#port#bit), out.name ? PSTR_X : PSTR_EMPTY);
-#include "config.h"
-        putchar('\n');
+        ports_print(out_list, &out, NELEM(out_list));
 }
 
 void cmd_on_off(int argc, char* argv[]) {
         if (argc != 2)
                 return usage();
         if (check_manual()) {
-                int on = strcmp_P(argv[0], PSTR("on")) ? 0 : 1;
-#define OUT(name, port, bit, alias) \
-                if (!strcmp_P(argv[1], PSTR_out_##name##_name) \
-                    IF_EMPTY(alias,, || !strcmp_P(argv[1], PSTR_out_##name##_alias))) \
-                { out.name = on; return; }
-#include "config.h"
+                uint8_t* bits = (uint8_t*)&out;
+                for (int i = 0; i < NELEM(out_list); ++i) {
+                        port_t port;
+                        memcpy_P(&port, out_list + i, sizeof (port_t));
+                        if (!strcmp_P(argv[1], port.name) ||
+                            (port.alias && !strcmp_P(argv[1], port.alias))) {
+                                if (!strcmp_P(argv[0], PSTR("on")))
+                                        bits[i / 8] |= (1 << (i % 8));
+                                else
+                                        bits[i / 8] &= ~(1 << (i % 8));
+                                return;
+                        }
+                }
+                printf_P(PSTR("Output not found: %s\n"), argv[1]);
         }
 }
 
