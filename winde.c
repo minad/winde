@@ -116,7 +116,6 @@ enum {
 #include "config.h"
 };
 
-inline void action_() {}
 #define ACTION(name, code) inline void action_##name() { code }
 #include "config.h"
 
@@ -189,7 +188,7 @@ void state_update() {
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
 
 #define TRANSITION(initial, event, final, act, attrs) \
-        if (state == STATE_##initial && (event)) { state_transition(STATE_##final); action_##act(); return; }
+        if (state == STATE_##initial && (event)) { state_transition(STATE_##final); IF_EMPTY(act,, action_##act()); return; }
 #include "config.h"
 }
 
