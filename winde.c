@@ -286,8 +286,8 @@ void cmd_on_off(int argc, char* argv[]) {
         if (check_manual()) {
                 int on = strcmp_P(argv[0], PSTR("on")) ? 0 : 1;
 #define OUT(name, port, bit, alias) \
-                if (!strcmp_P(argv[1], PSTR_out_##name##_name) || \
-                    IF_EMPTY(alias, 0, !strcmp_P(argv[1], PSTR_out_##name##_alias))) \
+                if (!strcmp_P(argv[1], PSTR_out_##name##_name) \
+                    IF_EMPTY(alias,, || !strcmp_P(argv[1], PSTR_out_##name##_alias))) \
                 { out.name = on; return; }
 #include "config.h"
         }
