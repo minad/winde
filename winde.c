@@ -18,7 +18,7 @@
 
 #define NELEM(a) (sizeof (a) / sizeof (a[0]))
 // inline can be commented out to check function size with avr-nm
-#define INLINE //  inline
+#define INLINE  //inline
 
 typedef volatile struct {
         uint8_t read, write, size;
@@ -178,14 +178,14 @@ int main() {
 }
 
 INLINE void counter_load() {
-#define COUNTER(name) counter.name = counter_old.name = eeprom_read_dword(&counter_eeprom.name);
-#include "config.h"
+        eeprom_read_block(&counter, &counter_eeprom, sizeof (counter));
+        memcpy(&counter_old, &counter, sizeof (counter));
 }
 
 INLINE void counter_save() {
 #define COUNTER(name) \
-                if (counter_old.name != counter.name) \
-                { eeprom_write_dword(&counter_eeprom.name, counter.name); counter_old.name = counter.name; }
+        if (counter_old.name != counter.name) \
+        { eeprom_write_dword(&counter_eeprom.name, counter.name); counter_old.name = counter.name; }
 #include "config.h"
 }
 
@@ -195,8 +195,7 @@ INLINE void ports_init() {
 }
 
 void ports_reset() {
-#define OUT(name, port, bit, alias) out.name = 0;
-#include "config.h"
+        memset(&out, 0, sizeof (out));
 }
 
 INLINE void ports_read() {
@@ -380,8 +379,8 @@ void cmd_counter(int argc, char* argv[]) {
 #include "config.h"
                 putchar('\n');
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--reset"))) {
-#define COUNTER(name) counter.name = 0;
-#include "config.h"
+                memset(&counter, 0, sizeof (counter));
+                memset(&counter_old, 0, sizeof (counter_old));
         } else {
                 usage();
         }
