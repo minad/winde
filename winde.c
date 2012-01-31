@@ -355,7 +355,7 @@ void cmd_on_off(int argc, char* argv[]) {
                         memcpy_P(&port, out_list + i, sizeof (port_t));
                         if (!strcmp_P(argv[1], port.name) ||
                             (port.alias && !strcmp_P(argv[1], port.alias))) {
-                                bitfield_set(out.bitfield, i, !strcmp_P(argv[0], PSTR("on")));
+                                bitfield_set(out.bitfield, i, !strcmp_P(argv[0], PSTR_cmd_on_name));
                                 return;
                         }
                 }
