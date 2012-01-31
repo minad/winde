@@ -38,7 +38,7 @@ INLINE void  ports_init();
 void         ports_reset();
 INLINE void  ports_read();
 INLINE void  ports_write();
-void         ports_print(const port_t* ports, const void* bitset, int n);
+void         ports_print(const port_t* ports, const uint8_t* bitset, int n);
 
 void         state_update();
 const char*  state_str(uint8_t);
@@ -115,6 +115,7 @@ union {
 #define IN(name, port, bit, alias) uint8_t alias : 1;
 #include "config.h"
         };
+        uint8_t bitset[0];
 } in;
 
 union {
@@ -126,6 +127,7 @@ union {
 #define OUT(name, port, bit, alias) uint8_t alias : 1;
 #include "config.h"
         };
+        uint8_t bitset[0];
 } out;
 
 const port_t PROGMEM in_list[] = {
@@ -305,14 +307,13 @@ INLINE void cmd_handler() {
         }
 }
 
-void ports_print(const port_t* port_list, const void* bitset, int n) {
-        const uint8_t* bits = (const uint8_t*)bitset;
+void ports_print(const port_t* port_list, const uint8_t* bitset, int n) {
         printf_P(PSTR_PORT_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
         for (int i = 0; i < n; ++i) {
                 port_t port;
                 memcpy_P(&port, port_list + i, sizeof (port_t));
                 printf_P(PSTR_PORT_FORMAT, port.name, port.alias ? port.alias : PSTR_EMPTY,
-                         port.port, (bits[i / 8] & (1 << (i % 8))) ? PSTR_X : PSTR_EMPTY);
+                         port.port, (bitset[i / 8] & (1 << (i % 8))) ? PSTR_X : PSTR_EMPTY);
         }
         putchar('\n');
 }
@@ -321,30 +322,29 @@ void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Inputs:\n"));
-        ports_print(in_list, &in, NELEM(in_list));
+        ports_print(in_list, in.bitset, NELEM(in_list));
 }
 
 void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Outputs:\n"));
-        ports_print(out_list, &out, NELEM(out_list));
+        ports_print(out_list, out.bitset, NELEM(out_list));
 }
 
 void cmd_on_off(int argc, char* argv[]) {
         if (argc != 2)
                 return usage();
         if (check_manual()) {
-                uint8_t* bits = (uint8_t*)&out;
                 for (int i = 0; i < NELEM(out_list); ++i) {
                         port_t port;
                         memcpy_P(&port, out_list + i, sizeof (port_t));
                         if (!strcmp_P(argv[1], port.name) ||
                             (port.alias && !strcmp_P(argv[1], port.alias))) {
                                 if (!strcmp_P(argv[0], PSTR("on")))
-                                        bits[i / 8] |= (1 << (i % 8));
+                                        out.bitset[i / 8] |= (1 << (i % 8));
                                 else
-                                        bits[i / 8] &= ~(1 << (i % 8));
+                                        out.bitset[i / 8] &= ~(1 << (i % 8));
                                 return;
                         }
                 }
