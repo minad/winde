@@ -321,9 +321,9 @@ void cmd_on_off(int argc, char* argv[]) {
 }
 
 void cmd_mode(int argc, char* argv[]) {
-        if (argc == 2 && !strcmp_P(argv[1], PSTR("m"))) {
+        if (argc == 2 && !strcmp_P(argv[1], PSTR("--manual"))) {
                 manual = 1;
-        } else if (argc == 2 && !strcmp_P(argv[1], PSTR("a"))) {
+        } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--auto"))) {
                 manual = 0;
                 state = 0;
                 ports_reset();
@@ -340,14 +340,18 @@ void cmd_reset(int argc, char* argv[]) {
 }
 
 void cmd_counter(int argc, char* argv[]) {
-        if (argc != 1)
-                return usage();
-        printf_P(PSTR("Counter:\n"));
-        printf_P(PSTR_COUNTER_FORMAT, PSTR_NAME, PSTR("Value"));
-#define STAT(name) \
-        printf_P(PSTR_COUNTER_FORMAT, PSTR(#name), counter.name);
+        if (argc == 1) {
+                printf_P(PSTR("Counter:\n"));
+                printf_P(PSTR_COUNTER_FORMAT, PSTR_NAME, PSTR("Value"));
+#define COUNTER(name) printf_P(PSTR_COUNTER_FORMAT, PSTR(#name), counter.name);
 #include "config.h"
-        putchar('\n');
+                putchar('\n');
+        } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--reset"))) {
+#define COUNTER(name) counter.name = 0;
+#include "config.h"
+        } else {
+                usage();
+        }
 }
 
 void cmd_help(int argc, char* argv[]) {
@@ -432,9 +436,8 @@ void uart_init() {
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        while (ringbuf_full(uart_txbuf)) {
+        while (ringbuf_full(uart_txbuf))
                 wdt_reset(); // wait, reset watchdog
-        }
         ringbuf_putc(uart_txbuf, c);
         UCSR0B |= (1 << UDRIE);
         return 0;
