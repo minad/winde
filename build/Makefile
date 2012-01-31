@@ -9,9 +9,10 @@ COMMON = -mmcu=$(MCU)
 
 ## Compile options common for all C compilation units.
 CFLAGS = $(COMMON)
-CFLAGS += -Wall -gdwarf-2 -std=gnu99 -DF_CPU=4000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -save-temps
+CFLAGS += -gdwarf-2 -std=gnu1x -DF_CPU=4000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -save-temps
 CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d
 CFLAGS += '-DVERSION="0.1"' -DGIT_VERSION="\"`git describe --all --long`\""
+CFLAGS += -Wall
 
 INCLUDES=-I..
 
@@ -20,8 +21,8 @@ ASMFLAGS = $(COMMON)
 ASMFLAGS += $(CFLAGS)
 ASMFLAGS += -x assembler-with-cpp -Wa,-gdwarf2
 
-LIBS = -Wl,-u,vfprintf -lprintf_flt
-LIBDIRS = -L..
+LIBS =
+LIBDIRS =
 
 ## Linker flags
 LDFLAGS = $(COMMON)
