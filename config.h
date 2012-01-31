@@ -19,19 +19,17 @@
 #ifndef TRANS_ACTION
 #  define TRANS_ACTION(initial, event, final, attrs, action)
 #endif
-#ifndef CMD
-#  define CMD(name, fn, args, help)
+#ifndef COMMAND
+#  define COMMAND(name, fn, args, help)
 #endif
 
 #include "config"
 
 #undef OUT
 #undef IN
-#undef OUT_ALIAS
-#undef IN_ALIAS
 #undef STATE
 #undef ACTION
 #undef EVENT
 #undef TRANS
 #undef TRANS_ACTION
-#undef CMD
+#undef COMMAND

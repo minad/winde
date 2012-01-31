@@ -71,7 +71,7 @@ DEF_PSTR(ALIAS,        "Alias")
 DEF_PSTR(PORT,         "Port")
 DEF_PSTR(ACTIVE,       "Active")
 
-#define CMD(name, fn, args, help) \
+#define COMMAND(name, fn, args, help) \
         DEF_PSTR(cmd_##name##_name, #name) \
         DEF_PSTR(cmd_##name##_args, args)  \
         DEF_PSTR(cmd_##name##_help, help)
@@ -81,7 +81,7 @@ DEF_PSTR(ACTIVE,       "Active")
 #include "config.h"
 
 const cmd_t PROGMEM cmd_list[] = {
-#define CMD(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
+#define COMMAND(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
 #include "config.h"
 };
 const cmd_t* current_cmd;
