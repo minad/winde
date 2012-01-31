@@ -18,7 +18,7 @@
 #define NELEM(a) (sizeof (a) / sizeof (a[0]))
 
 typedef struct {
-        int8_t read, write, size;
+        uint8_t read, write, size;
         char   buf[0];
 } ringbuf_t;
 
@@ -33,10 +33,10 @@ inline void  ports_read();
 inline void  ports_write();
 
 void         state_update();
-const char*  state_str(int8_t);
-void         state_transition(int8_t);
+const char*  state_str(uint8_t);
+void         state_transition(uint8_t);
 
-ringbuf_t*   ringbuf_init(void* buf, int8_t size);
+ringbuf_t*   ringbuf_init(void* buf, uint8_t size);
 inline int   ringbuf_full(ringbuf_t* rb);
 inline int   ringbuf_empty(ringbuf_t* rb);
 int          ringbuf_putc(ringbuf_t* rb, char c);
@@ -109,7 +109,7 @@ union {
         };
 } out;
 
-int8_t manual = 1, state = 0, show_prompt = 1;
+uint8_t manual = 1, state = 0, show_prompt = 1;
 
 enum {
 #define STATE(name, attrs) STATE_##name,
@@ -159,7 +159,7 @@ inline void ports_write() {
 #include "config.h"
 }
 
-const char* state_str(int8_t state) {
+const char* state_str(uint8_t state) {
         switch (state) {
 #define STATE(name, attrs) case STATE_##name: return PSTR(#name);
 #include "config.h"
@@ -167,7 +167,7 @@ const char* state_str(int8_t state) {
         }
 }
 
-void state_transition(int8_t new_state) {
+void state_transition(uint8_t new_state) {
         printf_P(PSTR("\n%S -> %S\n"), state_str(state), state_str(new_state));
         state = new_state;
         show_prompt = 1;
@@ -227,7 +227,7 @@ inline void cmd_exec(char* line) {
 }
 
 const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
-        for (int i = 0; i < NELEM(cmd_list); ++i) {
+        for (size_t i = 0; i < NELEM(cmd_list); ++i) {
                 memcpy_P(cmd, cmd_list + i, sizeof (cmd_t));
                 if (!strcmp_P(name, cmd->name))
                         return cmd_list + i;
@@ -238,7 +238,7 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
 
 void cmd_handler() {
         static char line[LINE_SIZE];
-        static int size = 0;
+        static size_t size = 0;
         if (show_prompt) {
                 printf_P(PSTR("%S> "), manual ? PSTR("manual") : state_str(state));
                 show_prompt = 0;
@@ -316,7 +316,7 @@ void cmd_help(int argc, char* argv[]) {
         cmd_t cmd;
         if (argc == 1) {
                 printf_P(PSTR("List of commands:\n"));
-                for (int i = 0; i < NELEM(cmd_list); ++i) {
+                for (size_t i = 0; i < NELEM(cmd_list); ++i) {
                         memcpy_P(&cmd, cmd_list + i, sizeof (cmd_t));
                         printf_P(PSTR("  %20S %S\n"), cmd.name, cmd.help);
                 }
@@ -335,7 +335,7 @@ void cmd_version(int argc, char* argv[]) {
         print_version();
 }
 
-ringbuf_t* ringbuf_init(void* buf, int8_t size) {
+ringbuf_t* ringbuf_init(void* buf, uint8_t size) {
 	ringbuf_t *rb = (ringbuf_t*)buf;
 	rb->size = size - sizeof(ringbuf_t);
 	rb->read = rb->write = 0;
