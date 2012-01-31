@@ -41,7 +41,7 @@ INLINE void  ports_init();
 void         ports_reset();
 INLINE void  ports_read();
 INLINE void  ports_write();
-void         ports_print(const port_t* ports, const uint8_t* bitfield, int n);
+void         ports_print(const port_t* ports, const uint8_t* bitfield, size_t n);
 
 void         state_update();
 const char*  state_str(uint8_t);
@@ -321,7 +321,7 @@ INLINE void cmd_handler() {
         }
 }
 
-void ports_print(const port_t* port_list, const uint8_t* bitfield, int n) {
+void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
         printf_P(PSTR_PORT_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
         for (size_t i = 0; i < n; ++i) {
                 port_t port;
