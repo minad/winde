@@ -1,7 +1,7 @@
 #define EMPTY()
-#define __SECOND(a, b)     b
 #define _CAT(a, b)         a ## b
 #define CAT(a, b)          _CAT(a, b)
+#define __SECOND(a, b)     b
 #define _SECOND(tuple)     __SECOND tuple
 #define _IS_EMPTY(arg)     _SECOND((_ ## arg()))
 #define __IS_EMPTY_HELPER  ,1 EMPTY
