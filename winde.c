@@ -34,6 +34,9 @@ typedef struct {
         const char *name, *alias, *port;
 } port_t;
 
+INLINE int   bitfield_get(const uint8_t* bitfield, size_t i);
+INLINE void  bitfield_set(uint8_t* bitfield, size_t i, uint8_t set);
+
 INLINE void  ports_init();
 void         ports_reset();
 INLINE void  ports_read();
@@ -72,17 +75,6 @@ void         cmd_reset(int argc, char* argv[]);
 void         cmd_counter(int argc, char* argv[]);
 void         cmd_help(int argc, char* argv[]);
 void         cmd_version(int argc, char* argv[]);
-
-int bitfield_get(const uint8_t* bitfield, size_t i) {
-        return bitfield[i >> 3] & (0x80 >> (i & 7));
-}
-
-void bitfield_set(uint8_t* bitfield, size_t i, uint8_t set) {
-        if (set)
-                bitfield[i >> 3] |= (0x80 >> (i & 7));
-        else
-                bitfield[i >> 3] &= ~(0x80 >> (i & 7));
-}
 
 ringbuf_t *uart_rxbuf, *uart_txbuf;
 
@@ -188,6 +180,17 @@ int main() {
                 wdt_reset();
         }
         return 0;
+}
+
+INLINE int bitfield_get(const uint8_t* bitfield, size_t i) {
+        return (bitfield[i >> 3] >> (i & 7)) & 1;
+}
+
+INLINE void bitfield_set(uint8_t* bitfield, size_t i, uint8_t set) {
+        if (set)
+                bitfield[i >> 3] |= (1 << (i & 7));
+        else
+                bitfield[i >> 3] &= ~(1 << (i & 7));
 }
 
 INLINE void counter_load() {
