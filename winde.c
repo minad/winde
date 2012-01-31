@@ -128,8 +128,6 @@ int main() {
 }
 
 inline void ports_init() {
-        ports_reset();
-
 #define OUT(name, port, bit) DDR ## port |= (1 << bit);
 #include "config.h"
 }
