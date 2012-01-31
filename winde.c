@@ -17,7 +17,7 @@
 
 #define NELEM(a) (sizeof (a) / sizeof (a[0]))
 
-typedef struct {
+typedef volatile struct {
         uint8_t read, write, size;
         char   buf[0];
 } ringbuf_t;
