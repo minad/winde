@@ -12,9 +12,9 @@
 
 #define BAUD           9600
 #define MAX_ARGS       4
-#define RINGBUF_RXSIZE 32
+#define RINGBUF_RXSIZE 16
 #define RINGBUF_TXSIZE 64
-#define LINE_SIZE      64
+#define LINE_SIZE      80
 
 #define NELEM(a) (sizeof (a) / sizeof (a[0]))
 
@@ -45,7 +45,7 @@ int          ringbuf_getc(ringbuf_t* rb);
 
 inline void  uart_init();
 int          uart_putchar(char c, FILE* fp);
-inline int   uart_getc();
+char*        uart_gets();
 
 inline void  counter_load();
 inline void  counter_save();
@@ -53,7 +53,7 @@ inline void  counter_save();
 void         usage();
 int          check_manual();
 void         print_version();
-void         cmd_handler();
+inline void  cmd_handler();
 inline void  cmd_exec(char*);
 const cmd_t* cmd_find(const char*, cmd_t*);
 void         cmd_in(int argc, char* argv[]);
@@ -246,7 +246,7 @@ inline void cmd_exec(char* line) {
         int argc;
         cmd_t cmd;
         for (argc = 0; argc < MAX_ARGS; ++argc) {
-                if (!(argv[argc] = strsep_P(&line, PSTR(" \t"))) || *argv[argc] == '\0')
+                if (!(argv[argc] = strsep_P(&line, PSTR(" "))) || *argv[argc] == '\0')
                         break;
         }
         if (argc > 0 && (current_cmd = cmd_find(argv[0], &cmd)))
@@ -263,25 +263,15 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
         return 0;
 }
 
-void cmd_handler() {
-        static char line[LINE_SIZE];
-        static size_t size = 0;
+inline void cmd_handler() {
         if (show_prompt) {
                 printf_P(PSTR("%S> "), manual ? PSTR("manual") : state_str(state));
                 show_prompt = 0;
         }
-        int c = uart_getc();
-        if (c != EOF) {
-                if (c == '\r') {
-                        putchar('\n');
-                        line[size] = 0;
-                        cmd_exec(line);
-                        size = 0;
-                        show_prompt = 1;
-                } else if (size + 1 < sizeof (line)) {
-                        putchar(c);
-                        line[size++] = c;
-                }
+        char* line = uart_gets();
+        if (line) {
+                cmd_exec(line);
+                show_prompt = 1;
         }
 }
 
@@ -443,8 +433,63 @@ int uart_putchar(char c, FILE* fp) {
         return 0;
 }
 
-inline int uart_getc() {
-        return ringbuf_getc(uart_rxbuf);
+inline char* uart_gets() {
+        static char line[LINE_SIZE];
+        static size_t size = 0;
+        int c = ringbuf_getc(uart_rxbuf);
+        switch (c) {
+        case EOF:
+                break;
+        case '\b':   // backspace deletes the last character
+        case '\x7f': // DEL
+                if (size > 0) {
+                        putchar('\b');
+                        putchar(' ');
+                        putchar('\b');
+                        --size;
+                } else {
+                        putchar('\a');
+                }
+                break;
+        case '\r':
+        case '\n':
+                putchar('\n');
+                line[size] = 0;
+                size = 0;
+                return line;
+        case 'c' & 0x1F: // ^c prints newline and clears buffer
+                putchar('\n');
+                size = 0;
+                break;
+        case 'w' & 0x1F: // ^w kills the last word
+                while (size > 0 && line[size-1] != ' ') {
+                        putchar('\b');
+                        putchar(' ');
+                        putchar('\b');
+                        --size;
+                }
+                break;
+        case 'u' & 0x1F: // ^u kills the entire buffer
+                while (size > 0) {
+                        putchar('\b');
+                        putchar(' ');
+                        putchar('\b');
+                        --size;
+                }
+                break;
+        case '\t': // tab is replaced by space
+                c = ' ';
+                // fall through
+        default:
+                if (size + 1 < sizeof (line)) {
+                        putchar(c);
+                        line[size++] = c;
+                } else {
+                        putchar('\a');
+                }
+                break;
+        }
+        return 0;
 }
 
 ISR(USART0_RX_vect) {
