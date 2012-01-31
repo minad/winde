@@ -17,6 +17,8 @@
 #define LINE_SIZE      80
 
 #define NELEM(a) (sizeof (a) / sizeof (a[0]))
+// inline can be commented out to check function size with avr-nm
+#define INLINE //  inline
 
 typedef volatile struct {
         uint8_t read, write, size;
@@ -32,10 +34,10 @@ typedef struct {
         const char *name, *alias, *port;
 } port_t;
 
-inline void  ports_init();
+INLINE void  ports_init();
 void         ports_reset();
-inline void  ports_read();
-inline void  ports_write();
+INLINE void  ports_read();
+INLINE void  ports_write();
 void         ports_print(const port_t* ports, const void* bitset, int n);
 
 void         state_update();
@@ -43,24 +45,24 @@ const char*  state_str(uint8_t);
 void         state_transition(uint8_t);
 
 ringbuf_t*   ringbuf_init(void* buf, uint8_t size);
-inline int   ringbuf_full(ringbuf_t* rb);
-inline int   ringbuf_empty(ringbuf_t* rb);
+INLINE int   ringbuf_full(ringbuf_t* rb);
+INLINE int   ringbuf_empty(ringbuf_t* rb);
 int          ringbuf_putc(ringbuf_t* rb, char c);
 int          ringbuf_getc(ringbuf_t* rb);
 
-inline void  uart_init();
+INLINE void  uart_init();
 int          uart_putchar(char c, FILE* fp);
 char*        uart_gets();
 
-inline void  counter_load();
-inline void  counter_save();
+INLINE void  counter_load();
+INLINE void  counter_save();
 
 void         backspace();
 void         usage();
 int          check_manual();
 void         print_version();
-inline void  cmd_handler();
-inline void  cmd_exec(char*);
+INLINE void  cmd_handler();
+INLINE void  cmd_exec(char*);
 const cmd_t* cmd_find(const char*, cmd_t*);
 void         cmd_in(int argc, char* argv[]);
 void         cmd_out(int argc, char* argv[]);
@@ -153,7 +155,7 @@ enum {
 #include "config.h"
 };
 
-#define ACTION(name, code) inline void action_##name() { code }
+#define ACTION(name, code) INLINE void action_##name() { code }
 #include "config.h"
 
 int main() {
@@ -175,19 +177,19 @@ int main() {
         return 0;
 }
 
-inline void counter_load() {
+INLINE void counter_load() {
 #define COUNTER(name) counter.name = counter_old.name = eeprom_read_dword(&counter_eeprom.name);
 #include "config.h"
 }
 
-inline void counter_save() {
+INLINE void counter_save() {
 #define COUNTER(name) \
                 if (counter_old.name != counter.name) \
                 { eeprom_write_dword(&counter_eeprom.name, counter.name); counter_old.name = counter.name; }
 #include "config.h"
 }
 
-inline void ports_init() {
+INLINE void ports_init() {
 #define OUT(name, port, bit, alias) DDR ## port |= (1 << bit);
 #include "config.h"
 }
@@ -197,12 +199,12 @@ void ports_reset() {
 #include "config.h"
 }
 
-inline void ports_read() {
+INLINE void ports_read() {
 #define IN(name, port, bit, alias) in.name = (PIN ## port >> bit) & 1;
 #include "config.h"
 }
 
-inline void ports_write() {
+INLINE void ports_write() {
 #define OUT(name, port, bit, alias) \
         if (out.name) { PORT ## port |= (1 << bit); } \
         else { PORT ## port &= ~(1 << bit); }
@@ -270,7 +272,7 @@ void print_version() {
                       "  Software:      Daniel 'Teilchen' Mendler\n\n"));
 }
 
-inline void cmd_exec(char* line) {
+INLINE void cmd_exec(char* line) {
         char *argv[MAX_ARGS];
         int argc;
         cmd_t cmd;
@@ -292,7 +294,7 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
         return 0;
 }
 
-inline void cmd_handler() {
+INLINE void cmd_handler() {
         if (show_prompt) {
                 printf_P(PSTR("%S> "), manual ? PSTR("manual") : state_str(state));
                 show_prompt = 0;
@@ -415,11 +417,11 @@ ringbuf_t* ringbuf_init(void* buf, uint8_t size) {
 	return rb;
 }
 
-inline int ringbuf_full(ringbuf_t* rb) {
+INLINE int ringbuf_full(ringbuf_t* rb) {
         return (rb->read == (rb->write + 1) % rb->size);
 }
 
-inline int ringbuf_empty(ringbuf_t* rb) {
+INLINE int ringbuf_empty(ringbuf_t* rb) {
         return (rb->read == rb->write);
 }
 
@@ -474,7 +476,7 @@ int uart_putchar(char c, FILE* fp) {
         return 0;
 }
 
-inline char* uart_gets() {
+char* uart_gets() {
         static char line[LINE_SIZE];
         static size_t size = 0;
         int c = ringbuf_getc(uart_rxbuf);
