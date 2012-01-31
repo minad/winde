@@ -38,7 +38,7 @@ INLINE void  ports_init();
 void         ports_reset();
 INLINE void  ports_read();
 INLINE void  ports_write();
-void         ports_print(const port_t* ports, const uint8_t* bitset, int n);
+void         ports_print(const port_t* ports, const uint8_t* bitfield, int n);
 
 void         state_update();
 const char*  state_str(uint8_t);
@@ -72,6 +72,17 @@ void         cmd_reset(int argc, char* argv[]);
 void         cmd_counter(int argc, char* argv[]);
 void         cmd_help(int argc, char* argv[]);
 void         cmd_version(int argc, char* argv[]);
+
+int bitfield_get(const uint8_t* bitfield, size_t i) {
+        return bitfield[i >> 3] & (0x80 >> (i & 7));
+}
+
+void bitfield_set(uint8_t* bitfield, size_t i, uint8_t set) {
+        if (set)
+                bitfield[i >> 3] |= (0x80 >> (i & 7));
+        else
+                bitfield[i >> 3] &= ~(0x80 >> (i & 7));
+}
 
 ringbuf_t *uart_rxbuf, *uart_txbuf;
 
@@ -115,7 +126,7 @@ union {
 #define IN(name, port, bit, alias) uint8_t alias : 1;
 #include "config.h"
         };
-        uint8_t bitset[0];
+        uint8_t bitfield[0];
 } in;
 
 union {
@@ -127,7 +138,7 @@ union {
 #define OUT(name, port, bit, alias) uint8_t alias : 1;
 #include "config.h"
         };
-        uint8_t bitset[0];
+        uint8_t bitfield[0];
 } out;
 
 const port_t PROGMEM in_list[] = {
@@ -307,13 +318,13 @@ INLINE void cmd_handler() {
         }
 }
 
-void ports_print(const port_t* port_list, const uint8_t* bitset, int n) {
+void ports_print(const port_t* port_list, const uint8_t* bitfield, int n) {
         printf_P(PSTR_PORT_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
-        for (int i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
                 port_t port;
                 memcpy_P(&port, port_list + i, sizeof (port_t));
                 printf_P(PSTR_PORT_FORMAT, port.name, port.alias ? port.alias : PSTR_EMPTY,
-                         port.port, (bitset[i / 8] & (1 << (i % 8))) ? PSTR_X : PSTR_EMPTY);
+                         port.port, bitfield_get(bitfield, i) ? PSTR_X : PSTR_EMPTY);
         }
         putchar('\n');
 }
@@ -322,29 +333,26 @@ void cmd_in(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Inputs:\n"));
-        ports_print(in_list, in.bitset, NELEM(in_list));
+        ports_print(in_list, in.bitfield, NELEM(in_list));
 }
 
 void cmd_out(int argc, char* argv[]) {
         if (argc != 1)
                 return usage();
         printf_P(PSTR("Outputs:\n"));
-        ports_print(out_list, out.bitset, NELEM(out_list));
+        ports_print(out_list, out.bitfield, NELEM(out_list));
 }
 
 void cmd_on_off(int argc, char* argv[]) {
         if (argc != 2)
                 return usage();
         if (check_manual()) {
-                for (int i = 0; i < NELEM(out_list); ++i) {
+                for (size_t i = 0; i < NELEM(out_list); ++i) {
                         port_t port;
                         memcpy_P(&port, out_list + i, sizeof (port_t));
                         if (!strcmp_P(argv[1], port.name) ||
                             (port.alias && !strcmp_P(argv[1], port.alias))) {
-                                if (!strcmp_P(argv[0], PSTR("on")))
-                                        out.bitset[i / 8] |= (1 << (i % 8));
-                                else
-                                        out.bitset[i / 8] &= ~(1 << (i % 8));
+                                bitfield_set(out.bitfield, i, !strcmp_P(argv[0], PSTR("on")));
                                 return;
                         }
                 }
@@ -417,11 +425,11 @@ ringbuf_t* ringbuf_init(void* buf, uint8_t size) {
 }
 
 INLINE int ringbuf_full(ringbuf_t* rb) {
-        return (rb->read == (rb->write + 1) % rb->size);
+        return rb->read == (rb->write + 1) % rb->size;
 }
 
 INLINE int ringbuf_empty(ringbuf_t* rb) {
-        return (rb->read == rb->write);
+        return rb->read == rb->write;
 }
 
 int ringbuf_putc(ringbuf_t* rb, char c) {
