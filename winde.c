@@ -47,7 +47,7 @@ void         state_update();
 const char*  state_str(uint8_t);
 void         state_transition(uint8_t);
 
-ringbuf_t*   ringbuf_init(void* buf, uint8_t size);
+INLINE ringbuf_t* ringbuf_init(void* buf, uint8_t size);
 INLINE int   ringbuf_full(ringbuf_t* rb);
 INLINE int   ringbuf_empty(ringbuf_t* rb);
 int          ringbuf_putc(ringbuf_t* rb, char c);
@@ -420,7 +420,7 @@ void cmd_version(int argc, char* argv[]) {
         print_version();
 }
 
-ringbuf_t* ringbuf_init(void* buf, uint8_t size) {
+INLINE ringbuf_t* ringbuf_init(void* buf, uint8_t size) {
 	ringbuf_t *rb = (ringbuf_t*)buf;
 	rb->size = size - sizeof(ringbuf_t);
 	rb->read = rb->write = 0;
