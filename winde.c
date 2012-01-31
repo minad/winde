@@ -7,6 +7,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
+#include "pp.h"
 
 #define BAUD           9600
 #define MAX_ARGS       4
@@ -77,7 +78,7 @@ DEF_PSTR(ACTIVE,       "Active")
         DEF_PSTR(cmd_##name##_help, help)
 #define OUT(name, port, bit, alias) \
         DEF_PSTR(out_##name##_name, #name) \
-        DEF_PSTR(out_##name##_alias, #alias)
+        IF_EMPTY(alias, , DEF_PSTR(out_##name##_alias, #alias))
 #include "config.h"
 
 const cmd_t PROGMEM cmd_list[] = {
@@ -115,6 +116,7 @@ enum {
 #include "config.h"
 };
 
+inline void action_() {}
 #define ACTION(name, code) inline void action_##name() { code }
 #include "config.h"
 
@@ -186,10 +188,8 @@ void state_update() {
                      (state != STATE_aufbau_ok && in.schalter_auszugsbremse_auf) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
 
-#define TRANPSTR_ACTION(initial, event, final, attrs, act) \
+#define TRANSITION(initial, event, final, act, attrs) \
         if (state == STATE_##initial && (event)) { state_transition(STATE_##final); action_##act(); return; }
-#define TRANS(initial, event, final, attrs) \
-        if (state == STATE_##initial && (event)) { state_transition(STATE_##final); return; }
 #include "config.h"
 }
 
@@ -264,7 +264,7 @@ void cmd_in(int argc, char* argv[]) {
         printf_P(PSTR("Inputs:\n"));
         printf_P(PSTR_TABLE_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
 #define IN(name, port, bit, alias) \
-        printf_P(PSTR_TABLE_FORMAT, PSTR(#name), PSTR(#alias), PSTR(#port#bit), in.name ? PSTR_X : PSTR_EMPTY);
+        printf_P(PSTR_TABLE_FORMAT, PSTR(#name), IF_EMPTY(alias, PSTR_EMPTY, PSTR(#alias)), PSTR(#port#bit), in.name ? PSTR_X : PSTR_EMPTY);
 #include "config.h"
         putchar('\n');
 }
@@ -275,7 +275,7 @@ void cmd_out(int argc, char* argv[]) {
         printf_P(PSTR("Outputs:\n"));
         printf_P(PSTR_TABLE_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
 #define OUT(name, port, bit, alias) \
-        printf_P(PSTR_TABLE_FORMAT, PSTR_out_##name##_name, PSTR_out_##name##_alias, PSTR(#port#bit), out.name ? PSTR_X : PSTR_EMPTY);
+        printf_P(PSTR_TABLE_FORMAT, PSTR_out_##name##_name, IF_EMPTY(alias, PSTR_EMPTY, PSTR_out_##name##_alias), PSTR(#port#bit), out.name ? PSTR_X : PSTR_EMPTY);
 #include "config.h"
         putchar('\n');
 }
@@ -287,7 +287,7 @@ void cmd_on_off(int argc, char* argv[]) {
                 int on = strcmp_P(argv[0], PSTR("on")) ? 0 : 1;
 #define OUT(name, port, bit, alias) \
                 if (!strcmp_P(argv[1], PSTR_out_##name##_name) || \
-                    (sizeof (#alias) != 1 && !strcmp_P(argv[1], PSTR_out_##name##_alias))) \
+                    IF_EMPTY(alias, 0, !strcmp_P(argv[1], PSTR_out_##name##_alias))) \
                 { out.name = on; return; }
 #include "config.h"
         }

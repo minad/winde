@@ -13,11 +13,8 @@
 #ifndef EVENT
 #  define EVENT(name, condition)
 #endif
-#ifndef TRANS
-#  define TRANS(initial, event, final, attrs)
-#endif
-#ifndef TRANS_ACTION
-#  define TRANS_ACTION(initial, event, final, attrs, action)
+#ifndef TRANSITION
+#  define TRANSITION(initial, event, final, attrs, action)
 #endif
 #ifndef COMMAND
 #  define COMMAND(name, fn, args, help)
@@ -30,6 +27,5 @@
 #undef STATE
 #undef ACTION
 #undef EVENT
-#undef TRANS
-#undef TRANS_ACTION
+#undef TRANSITION
 #undef COMMAND
