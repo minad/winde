@@ -50,6 +50,7 @@ char*        uart_gets();
 inline void  counter_load();
 inline void  counter_save();
 
+void         backspace();
 void         usage();
 int          check_manual();
 void         print_version();
@@ -218,6 +219,12 @@ void state_update() {
 #define TRANSITION(initial, event, final, act, attrs) \
         if (state == STATE_##initial && (event)) { state_transition(STATE_##final); IF_EMPTY(act,, action_##act()); return; }
 #include "config.h"
+}
+
+void backspace() {
+        putchar('\b');
+        putchar(' ');
+        putchar('\b');
 }
 
 void usage() {
@@ -443,9 +450,7 @@ inline char* uart_gets() {
         case '\b':   // backspace deletes the last character
         case '\x7f': // DEL
                 if (size > 0) {
-                        putchar('\b');
-                        putchar(' ');
-                        putchar('\b');
+                        backspace();
                         --size;
                 } else {
                         putchar('\a');
@@ -462,20 +467,12 @@ inline char* uart_gets() {
                 size = 0;
                 break;
         case 'w' & 0x1F: // ^w kills the last word
-                while (size > 0 && line[size-1] != ' ') {
-                        putchar('\b');
-                        putchar(' ');
-                        putchar('\b');
-                        --size;
-                }
+                for (; size > 0 && line[size-1] != ' '; --size)
+                        backspace();
                 break;
         case 'u' & 0x1F: // ^u kills the entire buffer
-                while (size > 0) {
-                        putchar('\b');
-                        putchar(' ');
-                        putchar('\b');
-                        --size;
-                }
+                for (; size > 0; --size)
+                        backspace();
                 break;
         case '\t': // tab is replaced by space
                 c = ' ';
