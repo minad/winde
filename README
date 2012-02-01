@@ -1,8 +1,8 @@
 Software für die Windenelektronik
 =================================
 
-Anschlüsse
-----------
+Anschlüsse auf der Platine
+--------------------------
 
 Vom Kühlkörper (links) nach rechts
 
@@ -13,13 +13,46 @@ Anschluss Strom
 Anschluss JTAG
 1. Weiß TDI
 2. Orange TDO
-3. Grün TAS
+3. Grün TMS
+4. Braun TCK
+
+Anschlüsse von AVR mkII
+-----------------------
+
+Schwarz TCK
+Weiß    GND
+Grau    TDO
+Lila    VTref
+Blau    TMS
+Grün    nSRST
+Gelb    unbenutzt
+Orange  unbenutzt
+Rot     TDI
+Braun   GND
+
+1. Weiß GND -
+2. Lila VTref +
+
+1. Rot     TDI
+2. Grau    TDO
+3. Blau    TMS
+4. Schwarz TCK
+
+Anschlüsse von Paule AVR mkI
+----------------------------
+
+1. Schwarz/Rot -
+2. Gelb-Lila +
+
+1. Weiß TDI
+2. Orange TDO
+3. Grün TMS
 4. Braun TCK
 
 Serielle Schnittstelle
 ----------------------
 
-minicom -D /dev/ttyUSB1 -b 9600
+minicom -D /dev/ttyUSB0 -b 9600
 
 Deaktivieren der HW-Flusskontrolle in minicom nicht vergessen!
 

@@ -69,4 +69,4 @@ clean:
 -include $(shell mkdir dep 2>/dev/null) $(wildcard dep/*)
 
 dude: all
-	avrdude -V -P /dev/ttyUSB0 -p $(MCU) -c jtag1 -e -U $(PROJECT).hex -v
+	avrdude -V -p $(MCU) -c jtag2 -P usb -e -U $(PROJECT).hex -v

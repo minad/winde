@@ -75,7 +75,7 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 
 #define DEF_PSTR(name, str) const prog_char PSTR_##name[] = str;
 
-DEF_PSTR(PORT_FORMAT,    "%-20S | %-24S | %-4S | %S\n")
+DEF_PSTR(PORT_FORMAT,    "%-18S | %-28S | %-4S | %S\n")
 DEF_PSTR(X,              "X")
 DEF_PSTR(EMPTY,          "")
 DEF_PSTR(NAME,           "Name")
@@ -283,7 +283,7 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
 
 INLINE void cmd_handler() {
         if (show_prompt) {
-                printf_P(PSTR("%S> "), manual ? PSTR("manual") : state_str(state));
+                printf_P(PSTR("%S> "), manual ? PSTR("MANUAL") : state_str(state));
                 show_prompt = 0;
         }
         char* line = uart_gets();
@@ -342,7 +342,9 @@ void cmd_mode(int argc, char* argv[]) {
                 manual = 0;
                 state = 0;
                 ports_reset();
-        } else if (argc != 1) {
+        } else if (argc == 1) {
+                printf_P(PSTR("%S mode is active\n"), manual ? PSTR("Manual") : PSTR("Automatic"));
+        } else {
                 usage();
         }
 }
@@ -360,7 +362,7 @@ void cmd_help(int argc, char* argv[]) {
                 printf_P(PSTR("List of commands:\n"));
                 for (size_t i = 0; i < NELEM(cmd_list); ++i) {
                         memcpy_P(&cmd, cmd_list + i, sizeof (cmd_t));
-                        printf_P(PSTR("  %20S %S\n"), cmd.name, cmd.help);
+                        printf_P(PSTR("  %-16S %S\n"), cmd.name, cmd.help);
                 }
                 putchar('\n');
         } else if (argc == 2) {
