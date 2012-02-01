@@ -7,7 +7,6 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
-#include <avr/eeprom.h>
 #include "pp.h"
 
 #define BAUD           9600
@@ -57,9 +56,6 @@ INLINE void  uart_init();
 int          uart_putchar(char c, FILE* fp);
 char*        uart_gets();
 
-INLINE void  counter_load();
-INLINE void  counter_save();
-
 void         backspace();
 void         usage();
 int          check_manual();
@@ -72,7 +68,6 @@ void         cmd_out(int argc, char* argv[]);
 void         cmd_on_off(int argc, char* argv[]);
 void         cmd_mode(int argc, char* argv[]);
 void         cmd_reset(int argc, char* argv[]);
-void         cmd_counter(int argc, char* argv[]);
 void         cmd_help(int argc, char* argv[]);
 void         cmd_version(int argc, char* argv[]);
 
@@ -81,7 +76,6 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 #define DEF_PSTR(name, str) const prog_char PSTR_##name[] = str;
 
 DEF_PSTR(PORT_FORMAT,    "%-20S | %-24S | %-4S | %S\n")
-DEF_PSTR(COUNTER_FORMAT, "%-20S | %S\n")
 DEF_PSTR(X,              "X")
 DEF_PSTR(EMPTY,          "")
 DEF_PSTR(NAME,           "Name")
@@ -145,14 +139,6 @@ const port_t PROGMEM out_list[] = {
 #include "config.h"
 };
 
-typedef struct {
-#define COUNTER(name) uint32_t name;
-#include "config.h"
-} counter_t;
-
-counter_t EEMEM counter_eeprom;
-counter_t counter, counter_old;
-
 uint8_t manual = 1, state = 0, show_prompt = 1;
 
 enum {
@@ -168,7 +154,6 @@ int main() {
         ports_init();
         uart_init();
         sei();
-        counter_load();
         wdt_enable(WDTO_500MS);
         print_version();
         for (;;) {
@@ -176,7 +161,6 @@ int main() {
                 state_update();
                 ports_write();
                 cmd_handler();
-                counter_save();
                 wdt_reset();
         }
         return 0;
@@ -191,18 +175,6 @@ INLINE void bitfield_set(uint8_t* bitfield, size_t i, uint8_t set) {
                 bitfield[i >> 3] |= (1 << (i & 7));
         else
                 bitfield[i >> 3] &= ~(1 << (i & 7));
-}
-
-INLINE void counter_load() {
-        eeprom_read_block(&counter, &counter_eeprom, sizeof (counter));
-        memcpy(&counter_old, &counter, sizeof (counter));
-}
-
-INLINE void counter_save() {
-#define COUNTER(name) \
-        if (counter_old.name != counter.name) \
-        { eeprom_write_dword(&counter_eeprom.name, counter.name); counter_old.name = counter.name; }
-#include "config.h"
 }
 
 INLINE void ports_init() {
@@ -380,21 +352,6 @@ void cmd_reset(int argc, char* argv[]) {
                 return usage();
         if (check_manual())
                 ports_reset();
-}
-
-void cmd_counter(int argc, char* argv[]) {
-        if (argc == 1) {
-                printf_P(PSTR("Counter:\n"));
-                printf_P(PSTR_COUNTER_FORMAT, PSTR_NAME, PSTR("Value"));
-#define COUNTER(name) printf_P(PSTR_COUNTER_FORMAT, PSTR(#name), counter.name);
-#include "config.h"
-                putchar('\n');
-        } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--reset"))) {
-                memset(&counter, 0, sizeof (counter));
-                memset(&counter_old, 0, sizeof (counter_old));
-        } else {
-                usage();
-        }
 }
 
 void cmd_help(int argc, char* argv[]) {

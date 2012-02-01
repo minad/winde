@@ -19,9 +19,6 @@
 #ifndef COMMAND
 #  define COMMAND(name, fn, args, help)
 #endif
-#ifndef COUNTER
-#  define COUNTER(name)
-#endif
 
 #include "config"
 
@@ -32,4 +29,3 @@
 #undef EVENT
 #undef TRANSITION
 #undef COMMAND
-#undef COUNTER
