@@ -1,3 +1,4 @@
+// DO NOT TOUCH THIS!
 #define EMPTY()
 #define _CAT(a, b)         a ## b
 #define CAT(a, b)          _CAT(a, b)
