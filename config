@@ -1,13 +1,13 @@
 // Konfiguration der Ausgänge
 //  (Name,              Port, Bit, Alias)
-OUT (led1,              A,    7,   led_eingekuppelt_links  )
-OUT (led2,              A,    6,   led_eingekuppelt_rechts )
-OUT (led3,              A,    5,   led_handbremse          )
-OUT (led4,              A,    4,   led_kappung             )
-OUT (led5,              A,    3,   led_temperatur          )
-OUT (led6,              A,    2,   led_power               )
-OUT (led7,              A,    1,                           )
-OUT (led8,              A,    0,                           )
+OUT (led1,              A,    7,                           )
+OUT (led2,              A,    6,   led_kappung             )
+OUT (led3,              A,    5,   led_power               )
+OUT (led4,              A,    4,   led_gangwarnung         )
+OUT (led5,              A,    3,   led_parkbremse          )
+OUT (led6,              A,    2,   led_eingekuppelt_links  )
+OUT (led7,              A,    1,   led_eingekupplt_rechts  )
+OUT (led8,              A,    0,   led_drehlampe           )
 OUT (buzzer,            F,    2,                           )
 OUT (latch_aus,         B,    6,                           )
 OUT (zuendungsfreigabe, C,    0,                           )
@@ -34,7 +34,7 @@ IN (system4,            D,    4,                              )
 IN (system5,            D,    3,   motor_temp_zu_hoch         )
 IN (system6,            D,    2,   wandler_temp_zu_hoch       )
 IN (system7,            D,    1,   kappung_gespannt           )
-IN (system8,            D,    0,   handbremse_angezogen       )
+IN (system8,            D,    0,   parkbremse_angezogen       )
 IN (system9,            B,    7,   motor_an                   )
 
 // Zustände des Automaten
@@ -52,7 +52,7 @@ STATE (ausziehen,           (BLUE2)              )
 
 // Ereignisse, die Zustandsübergänge auslösen
 //    (Ereignisname, Boolescher Ausdruck                                                 )
-EVENT (aufbau_ok,    in.kappung_gespannt && in.handbremse_angezogen && !in.falscher_gang )
+EVENT (aufbau_ok,    in.kappung_gespannt && in.parkbremse_angezogen && !in.falscher_gang )
 EVENT (temp_ok,      !in.motor_temp_zu_hoch && !in.wandler_temp_zu_hoch                  )
 
 // Aktionen beim Betreten eines Zustands

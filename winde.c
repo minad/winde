@@ -219,9 +219,8 @@ void state_update() {
 #define EVENT(name, condition) int name = (condition);
 #include "config.h"
 
-        out.led_handbremse = in.handbremse_angezogen;
+        out.led_parkbremse = in.parkbremse_angezogen;
         out.led_kappung = in.kappung_gespannt;
-        out.led_temperatur = !temp_ok;
         out.led_power = 1;
         out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
                      (state != STATE_aufbau_ok && in.schalter_auszugsbremse_auf) ||
