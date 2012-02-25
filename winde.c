@@ -239,7 +239,6 @@ void state_update() {
         out.led_kappung = in.kappung_gespannt;
         out.led_power = 1;
         out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
-                     (state != STATE_aufbau_ok && in.schalter_auszugsbremse_auf) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
 
 #define TRANSITION(initial, event, final, act, attrs) \
