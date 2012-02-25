@@ -193,7 +193,7 @@ void ports_reset() {
         PORTD |= (1 << 7);
         PORTE |= (1 << 6);
         PORTB &= ~(1 << 6);
-        _delay_ms(100);
+        _delay_ms(50);
         PORTD &= ~(1 << 7);
         PORTE &= ~(1 << 6);
         DDRD &= ~(1 << 7);
