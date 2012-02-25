@@ -67,3 +67,10 @@ Statemachine-Diagramme
 Wenn graphviz installiert ist, kann mit "make" direkt aus der Konfiguration ein Flussdiagramm
 des Mealy-Automaten erzeugt werden. Es wird die Datei "statemachine.pdf" erstellt.
 
+Fehler in der aktuellen Installation
+------------------------------------
+
+led6 funktion unklar, bzw led eingekuppelt links leuchtet nicht
+zuendungsfreigabe tut nicht
+falscher gang, parkbremse, motor_an nicht verschaltet
+wenn ausgang auszugsbremse an, geht auch eingang schalter_auszugsbremse an
