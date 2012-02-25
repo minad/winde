@@ -223,7 +223,7 @@ const char* state_str(uint8_t state) {
 }
 
 void state_transition(uint8_t new_state) {
-        printf_P(PSTR("\n%S -> %S\n"), state_str(state), state_str(new_state));
+        printf_P(PSTR("\nState transition %S -> %S\n"), state_str(state), state_str(new_state));
         state = new_state;
         show_prompt = 1;
 }
