@@ -140,7 +140,7 @@ const port_t PROGMEM out_list[] = {
 #include "config.h"
 };
 
-uint8_t manual = 1, state = 0, show_prompt = 1;
+uint8_t manual = 0, state = 0, show_prompt = 1;
 
 enum {
 #define STATE(name, attrs) STATE_##name,
