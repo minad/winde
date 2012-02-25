@@ -236,7 +236,7 @@ void state_update() {
 #include "config.h"
 
         out.led_parkbremse = in.parkbremse_angezogen;
-        out.led_kappung = in.kappung_gespannt;
+        out.led_kappvorrichtung = in.kappvorrichtung_falsch;
         out.led_power = 1;
         out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);

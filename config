@@ -1,7 +1,7 @@
 // Konfiguration der Ausgänge
 //  (Name,              Port, Bit, Alias)
 OUT (led1,              A,    7,   led_theta               )
-OUT (led2,              A,    6,   led_kappung             )
+OUT (led2,              A,    6,   led_kappvorrichtung     )
 OUT (led3,              A,    5,   led_power               )
 OUT (led4,              A,    4,   led_gangwarnung         )
 OUT (led5,              A,    3,   led_parkbremse          )
@@ -33,7 +33,7 @@ IN (in3,                D,    5,                              )
 IN (in4,                D,    4,                              )
 IN (in5,                D,    3,   motor_temp_zu_hoch         )
 IN (in6,                D,    2,   wandler_temp_zu_hoch       )
-IN (in7,                D,    1,   kappung_gespannt           )
+IN (in7,                D,    1,   kappvorrichtung_falsch     )
 IN (in8,                D,    0,   parkbremse_angezogen       )
 IN (in9,                B,    7,   motor_an                   )
 
@@ -51,9 +51,9 @@ STATE (schlepp_laeuft,      (shape=doublecircle) )
 STATE (motor_an_fehler,     (RED)                )
 
 // Ereignisse, die Zustandsübergänge auslösen
-//    (Ereignisname, Boolescher Ausdruck                                                 )
-EVENT (aufbau_ok,    in.kappung_gespannt && in.parkbremse_angezogen && !in.falscher_gang )
-EVENT (temp_ok,      !in.motor_temp_zu_hoch && !in.wandler_temp_zu_hoch                  )
+//    (Ereignisname, Boolescher Ausdruck                                                        )
+EVENT (aufbau_ok,    !in.kappvorrichtung_falsch && in.parkbremse_angezogen && !in.falscher_gang )
+EVENT (temp_ok,      !in.motor_temp_zu_hoch && !in.wandler_temp_zu_hoch                         )
 
 // Aktionen beim Betreten eines Zustands
 //     (Aktionsname,        Code-Block                                                                                          )
