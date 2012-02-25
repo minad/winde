@@ -61,7 +61,7 @@ void         backspace();
 void         usage();
 int          check_manual();
 void         print_version();
-INLINE void  cmd_handler();
+void         cmd_handler();
 INLINE void  cmd_exec(char*);
 const cmd_t* cmd_find(const char*, cmd_t*);
 void         cmd_in(int argc, char* argv[]);
@@ -140,7 +140,7 @@ const port_t PROGMEM out_list[] = {
 #include "config.h"
 };
 
-uint8_t manual = 0, state = 0, show_prompt = 1;
+uint8_t manual = 0, state = 0;
 
 enum {
 #define STATE(name, attrs) STATE_##name,
@@ -223,9 +223,8 @@ const char* state_str(uint8_t state) {
 }
 
 void state_transition(uint8_t new_state) {
-        printf_P(PSTR("\nState transition %S -> %S\n"), state_str(state), state_str(new_state));
+        printf_P(PSTR("\n%S->%S%% "), state_str(state), state_str(new_state));
         state = new_state;
-        show_prompt = 1;
 }
 
 void state_update() {
@@ -295,9 +294,10 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
         return 0;
 }
 
-INLINE void cmd_handler() {
+void cmd_handler() {
+        static uint8_t show_prompt = 1;
         if (show_prompt) {
-                printf_P(PSTR("%S> "), manual ? PSTR("MANUAL") : state_str(state));
+                printf_P(PSTR("%S%% "), manual ? PSTR("MANUAL") : state_str(state));
                 show_prompt = 0;
         }
         char* line = uart_gets();
