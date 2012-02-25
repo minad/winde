@@ -70,7 +70,9 @@ des Mealy-Automaten erzeugt werden. Es wird die Datei "statemachine.pdf" erstell
 Fehler in der aktuellen Installation
 ------------------------------------
 
-led6 funktion unklar, bzw led eingekuppelt links leuchtet nicht
-zuendungsfreigabe tut nicht
-falscher gang, parkbremse, motor_an nicht verschaltet
-wenn ausgang auszugsbremse an, geht auch eingang schalter_auszugsbremse an
+Fehlerliste:
+- Led 6 (Eingekuppelt links) leuchtet nicht
+- Zündungsfreigabe funktioniert nicht
+- Gangwarnung, Parkbremse, Motor an sind nicht verschaltet
+- Wenn Ausgang "Auszugsbremse" an, geht auch eingang "Schalter Aszugsbremse" an
+- Und das bekannte Problem: Reboot beim Zünden
