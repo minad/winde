@@ -7,6 +7,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
+#include <util/delay.h>
 #include "pp.h"
 
 #define BAUD           9600
@@ -178,11 +179,26 @@ INLINE void bitfield_set(uint8_t* bitfield, size_t i, uint8_t set) {
 }
 
 INLINE void ports_init() {
+        ports_reset();
+
 #define OUT(name, port, bit, alias) DDR ## port |= (1 << bit);
 #include "config.h"
 }
 
 void ports_reset() {
+        // Hack: Latch anschalten
+        // Vorgaukeln, dass auskuppeln gedrückt und Bremse getreten wird
+        DDRD |= (1 << 7);
+        DDRE |= (1 << 6);
+        PORTD |= (1 << 7);
+        PORTE |= (1 << 6);
+        PORTB &= ~(1 << 6);
+        _delay_ms(100);
+        PORTD &= ~(1 << 7);
+        PORTE &= ~(1 << 6);
+        DDRD &= ~(1 << 7);
+        DDRE &= ~(1 << 6);
+
         memset(&out, 0, sizeof (out));
 }
 
