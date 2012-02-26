@@ -52,7 +52,7 @@ Anschlüsse von Paule AVR mkI
 Serielle Schnittstelle
 ----------------------
 
-minicom -D /dev/ttyUSB0 -b 9600
+minicom -D /dev/ttyUSB0 -b 19200
 
 Deaktivieren der HW-Flusskontrolle in minicom nicht vergessen!
 

@@ -10,7 +10,7 @@
 #include <util/delay.h>
 #include "pp.h"
 
-#define BAUD           9600
+#define BAUD           19200
 #define MAX_ARGS       4
 #define RINGBUF_RXSIZE 16
 #define RINGBUF_TXSIZE 64
