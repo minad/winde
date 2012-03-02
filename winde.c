@@ -236,7 +236,8 @@ void state_update() {
 
         out.led_parkbremse = in.parkbremse_angezogen;
         out.led_kappvorrichtung = in.kappvorrichtung_falsch;
-        out.led_power = out.drehlampe = 1;
+        out.led_power = 1;
+        out.drehlampe = !in.motor_aus;
         out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
 
