@@ -74,7 +74,7 @@ void         cmd_version(int argc, char* argv[]);
 
 ringbuf_t *uart_rxbuf, *uart_txbuf;
 
-#define DEF_PSTR(name, str) const prog_char PSTR_##name[] = str;
+#define DEF_PSTR(name, str) const char PSTR_##name[] PROGMEM = str;
 
 DEF_PSTR(PORT_FORMAT,    "%-18S | %-28S | %-4S | %S\n")
 DEF_PSTR(X,              "X")
