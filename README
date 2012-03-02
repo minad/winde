@@ -77,4 +77,6 @@ Fehlerliste:
 - Und das bekannte Problem: Reboot beim Zünden
 - Hardware-Flusskontrolle muss immer in der Software ausgeschaltet werden, vlt kann man rxready auf ready in version 2 setzen
 - Buzzer ist zu leise, warum war der der Gangwarnung lauter?
-- Motor aus (in9) ist jetzt mit Generator aus verschaltet
+- in9 ist kaputt, immer High
+- Motor aus (in4) ist nicht verschaltet, ich hatte das mit GeneratorAus verschaltet, allerdings hat dann die Zündungsbrücke nicht
+mehr funktioniert. D.h. die Zündung auf der Windenseite war komplett wirkungslos, selbst bei Zündung aus ging das System an

@@ -234,7 +234,7 @@ void state_update() {
 #define EVENT(name, condition) int name = (condition);
 #include "config.h"
 
-        out.led_parkbremse = in.parkbremse_angezogen;
+        out.led_parkbremse = in.parkbremse_falsch;
         out.led_kappvorrichtung = in.kappvorrichtung_falsch;
         out.led_power = 1;
         out.drehlampe = !in.motor_aus;
