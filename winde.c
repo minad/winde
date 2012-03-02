@@ -223,7 +223,7 @@ const char* state_str(uint8_t state) {
 }
 
 void state_transition(uint8_t new_state) {
-        printf_P(PSTR("\n%S->%S%% "), state_str(state), state_str(new_state));
+        printf_P(PSTR("\n%S->%S %% "), state_str(state), state_str(new_state));
         state = new_state;
 }
 
@@ -236,7 +236,7 @@ void state_update() {
 
         out.led_parkbremse = in.parkbremse_angezogen;
         out.led_kappvorrichtung = in.kappvorrichtung_falsch;
-        out.led_power = 1;
+        out.led_power = out.drehlampe = 1;
         out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
 
@@ -295,9 +295,9 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
 }
 
 void cmd_handler() {
-        static uint8_t show_prompt = 1;
+        static uint8_t show_prompt = 0;
         if (show_prompt) {
-                printf_P(PSTR("%S%% "), manual ? PSTR("MANUAL") : state_str(state));
+                printf_P(PSTR("%S %% "), manual ? PSTR("MANUAL") : state_str(state));
                 show_prompt = 0;
         }
         char* line = uart_gets();

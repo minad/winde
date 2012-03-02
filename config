@@ -6,7 +6,7 @@ OUT (led3,              A,    5,   led_power               )
 OUT (led4,              A,    4,   led_gangwarnung         )
 OUT (led5,              A,    3,   led_parkbremse          )
 OUT (led6,              A,    2,   led_eingekuppelt_links  )
-OUT (led7,              A,    1,   led_eingekupplt_rechts  )
+OUT (led7,              A,    1,   led_eingekuppelt_rechts )
 OUT (led8,              A,    0,   drehlampe               )
 OUT (buzzer,            F,    2,                           )
 OUT (latch_aus,         B,    6,                           )
@@ -59,16 +59,21 @@ EVENT (temp_ok,        !in.motor_temp_zu_hoch && !in.wandler_temp_zu_hoch       
 EVENT (schlepp_fertig, in.bremse_getreten && in.schalter_auskuppeln                               )
 
 // Aktionen beim Betreten eines Zustands
-//     (Aktionsname,          Code-Block                                                                  )
-ACTION (links_einkuppeln,     out.einkuppeln_links = 1; out.trommelbremse_zu = 0;                         )
-ACTION (rechts_einkuppeln,    out.einkuppeln_rechts = 1; out.trommelbremse_zu = 0;                        )
-ACTION (auskuppeln,           out.einkuppeln_links = out.einkuppeln_rechts = 0; out.trommelbremse_zu = 1; )
-ACTION (latch_ausschalten,    out.latch_aus = 1;                                                          )
-ACTION (zuendung_freigeben,   out.zuendungsfreigabe = 1;                                                  )
-ACTION (zuendung_sperren,     out.zuendungsfreigabe = 0;                                                  )
-ACTION (trommelbremse_zu,     out.trommelbremse_zu = 1; out.auszugsbremse_auf = 1;                        )
-ACTION (zuendungsbruecke_an,  out.zuendungsbruecke = 1;                                                   )
-ACTION (zuendungsbruecke_aus, out.zuendungsbruecke = 0;                                                   )
+//     (Aktionsname,          Code-Block                                                    )
+ACTION (links_einkuppeln,     out.einkuppeln_links = out.led_eingekuppelt_links = 1;
+                              out.trommelbremse_zu = 0;                                     )
+ACTION (rechts_einkuppeln,    out.einkuppeln_rechts = 1; out.led_eingekuppelt_rechts = 1;
+                              out.trommelbremse_zu = 0;                                     )
+ACTION (auskuppeln,           out.einkuppeln_links = out.einkuppeln_rechts =
+                              out.led_eingekuppelt_links = out.led_eingekuppelt_rechts = 0;
+                              out.trommelbremse_zu = 1;
+			      out.latch_aus = 0;                                            )
+ACTION (latch_ausschalten,    out.latch_aus = 1;                                            )
+ACTION (zuendung_freigeben,   out.zuendungsfreigabe = 1;                                    )
+ACTION (zuendung_sperren,     out.zuendungsfreigabe = 0;                                    )
+ACTION (trommelbremse_zu,     out.trommelbremse_zu = 1; out.auszugsbremse_auf = 1;          )
+ACTION (zuendungsbruecke_an,  out.zuendungsbruecke = 1;                                     )
+ACTION (zuendungsbruecke_aus, out.zuendungsbruecke = 0;                                     )
 
 // Übergänge zwischen Zuständen
 //         (Anfangszustand,      Ereignis (Boolescher Ausdurck), Endzustand,          Aktion,               Graphviz-Attribute )
