@@ -11,7 +11,7 @@ COMMON = -mmcu=$(MCU)
 CFLAGS = $(COMMON)
 CFLAGS += -gdwarf-2 -std=gnu1x -DF_CPU=4000000UL -Os -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -save-temps
 CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d
-CFLAGS += '-DVERSION="0.1"' -DGIT_VERSION="\"`git describe --all --long`\""
+CFLAGS += '-DVERSION="0.2"' -DGIT_VERSION="\"`git describe --all --long`\""
 CFLAGS += -Wall
 
 INCLUDES=-I..
