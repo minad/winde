@@ -76,13 +76,13 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 
 #define DEF_PSTR(name, str) const char PSTR_##name[] PROGMEM = str;
 
-DEF_PSTR(PORT_FORMAT,    "%-18S | %-28S | %-4S | %S\n")
-DEF_PSTR(X,              "X")
-DEF_PSTR(EMPTY,          "")
-DEF_PSTR(NAME,           "Name")
-DEF_PSTR(ALIAS,          "Alias")
-DEF_PSTR(PORT,           "Port")
-DEF_PSTR(ACTIVE,         "Active")
+DEF_PSTR(PORT_FORMAT, "%-18S | %-28S | %-4S | %S\n")
+DEF_PSTR(X,           "X")
+DEF_PSTR(EMPTY,       "")
+DEF_PSTR(NAME,        "Name")
+DEF_PSTR(ALIAS,       "Alias")
+DEF_PSTR(PORT,        "Port")
+DEF_PSTR(ACTIVE,      "Active")
 
 #define COMMAND(name, fn, args, help) \
         DEF_PSTR(cmd_##name##_name, #name) \
