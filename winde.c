@@ -269,7 +269,7 @@ int usage(int show, int argc, char* argv[]) {
 
 int check_manual() {
         if (!manual)
-                printf_P(PSTR("Enable manual mode first!\n"));
+                printf_P(PSTR("Enable manual mode first with command 'mode --manual'.\n"));
         return manual;
 }
 
@@ -306,7 +306,7 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
 
 void cmd_handler() {
         if (!prompt_active) {
-                printf_P(PSTR("%S %% "), manual ? PSTR("MANUAL") : state_str(state));
+                printf_P(PSTR("%S $ "), manual ? PSTR("MANUAL") : state_str(state));
                 prompt_active = 1;
         }
         char* line = uart_gets();
