@@ -117,6 +117,18 @@ union {
 
 union {
         struct {
+#define IN(name, port, bit, alias) uint8_t name  : 1;
+#include "config.h"
+        };
+        struct {
+#define IN(name, port, bit, alias) uint8_t alias : 1;
+#include "config.h"
+        };
+        uint8_t bitfield[0];
+} last_in;
+
+union {
+        struct {
 #define OUT(name, port, bit, alias) uint8_t name  : 1;
 #include "config.h"
         };
@@ -203,6 +215,7 @@ void ports_reset() {
 }
 
 INLINE void ports_read() {
+        memcpy(&last_in, &in, sizeof (in));
 #define IN(name, port, bit, alias) in.name = (PIN ## port >> bit) & 1;
 #include "config.h"
 }
@@ -243,8 +256,24 @@ void state_update() {
         out.led_gangwarnung = in.gang_falsch;
         out.led_power = in.motor_aus;
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
-        out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
-                     (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
+        out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
+
+#define FALLING_EDGE(name) (last_in.name && !in.name)
+#define RISING_EDGE(name)  (!last_in.name && in.name)
+
+        if (state != STATE_bremse_getreten) {
+                if (RISING_EDGE(schalter_einkuppeln_links) || RISING_EDGE(schalter_einkuppeln_rechts))
+                        out.buzzer = 1;
+                else if (FALLING_EDGE(schalter_einkuppeln_links) || FALLING_EDGE(schalter_einkuppeln_rechts))
+                        out.buzzer = 0;
+        } else if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt) {
+                if (RISING_EDGE(schalter_auskuppeln))
+                        out.buzzer = 1;
+                else if (FALLING_EDGE(schalter_auskuppeln))
+                        out.buzzer = 0;
+        } else {
+                out.buzzer = 0;
+        }
 
 #define TRANSITION(initial, event, final, act, attrs) \
         if (state == STATE_##initial && (event)) { state_transition(STATE_##final); IF_EMPTY(act,, action_##act()); return; }
