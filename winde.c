@@ -58,7 +58,7 @@ int          uart_putchar(char c, FILE* fp);
 char*        uart_gets();
 
 void         backspace();
-void         usage();
+int          usage(int, int, char*[]);
 int          check_manual();
 void         print_version();
 void         cmd_handler();
@@ -102,7 +102,6 @@ const cmd_t PROGMEM cmd_list[] = {
 #define COMMAND(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
 #include "config.h"
 };
-const cmd_t* current_cmd;
 
 union {
         struct {
@@ -140,7 +139,7 @@ const port_t PROGMEM out_list[] = {
 #include "config.h"
 };
 
-uint8_t manual = 0, state = 0;
+uint8_t manual = 0, state = 0, last_state = 0, prompt_active = 0;
 
 enum {
 #define STATE(name, attrs) STATE_##name,
@@ -161,7 +160,8 @@ int main() {
                 ports_read();
                 state_update();
                 ports_write();
-                cmd_handler();
+                if (state == last_state)
+                        cmd_handler();
                 wdt_reset();
         }
         return 0;
@@ -223,22 +223,26 @@ const char* state_str(uint8_t state) {
 }
 
 void state_transition(uint8_t new_state) {
-        printf_P(PSTR("\n%S->%S %% "), state_str(state), state_str(new_state));
         state = new_state;
+        printf_P(PSTR("%S%S -> %S\n"), prompt_active ? PSTR("\n") : PSTR_EMPTY,
+                 state_str(last_state), state_str(new_state));
+        prompt_active = 0;
 }
 
 void state_update() {
         if (manual)
                 return;
 
+        last_state = state;
+
 #define EVENT(name, condition) int name = (condition);
 #include "config.h"
 
-        out.led_parkbremse = in.parkbremse_falsch;
+        out.led_parkbremse = !in.parkbremse_gezogen;
         out.led_kappvorrichtung = in.kappvorrichtung_falsch;
         out.led_gangwarnung = in.gang_falsch;
-        out.led_power = 1;
-        out.drehlampe = !in.motor_aus;
+        out.led_power = in.motor_aus;
+        out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
         out.buzzer = (state != STATE_bremse_getreten && (in.schalter_einkuppeln_links || in.schalter_einkuppeln_rechts)) ||
                      (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt && in.schalter_auskuppeln);
 
@@ -253,10 +257,14 @@ void backspace() {
         putchar('\b');
 }
 
-void usage() {
-        cmd_t cmd;
-        memcpy_P(&cmd, current_cmd, sizeof (cmd_t));
-        printf_P(PSTR("Usage: %S %S\n"), cmd.name, cmd.args);
+int usage(int show, int argc, char* argv[]) {
+        if (show || (argc == 2 && !strcmp_P(argv[1], PSTR("--help")))) {
+                cmd_t cmd;
+                cmd_find(argv[0], &cmd);
+                printf_P(PSTR("Usage: %S %S\n"), cmd.name, cmd.args);
+                return 1;
+        }
+        return 0;
 }
 
 int check_manual() {
@@ -282,7 +290,7 @@ INLINE void cmd_exec(char* line) {
                 if (!(argv[argc] = strsep_P(&line, PSTR(" "))) || *argv[argc] == '\0')
                         break;
         }
-        if (argc > 0 && (current_cmd = cmd_find(argv[0], &cmd)))
+        if (argc > 0 && cmd_find(argv[0], &cmd))
                 cmd.fn(argc, argv);
 }
 
@@ -297,15 +305,14 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
 }
 
 void cmd_handler() {
-        static uint8_t show_prompt = 0;
-        if (show_prompt) {
+        if (!prompt_active) {
                 printf_P(PSTR("%S %% "), manual ? PSTR("MANUAL") : state_str(state));
-                show_prompt = 0;
+                prompt_active = 1;
         }
         char* line = uart_gets();
         if (line) {
                 cmd_exec(line);
-                show_prompt = 1;
+                prompt_active = 0;
         }
 }
 
@@ -321,22 +328,22 @@ void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
 }
 
 void cmd_in(int argc, char* argv[]) {
-        if (argc != 1)
-                return usage();
+        if (usage(argc != 1, argc, argv))
+                return;
         printf_P(PSTR("Inputs:\n"));
         ports_print(in_list, in.bitfield, NELEM(in_list));
 }
 
 void cmd_out(int argc, char* argv[]) {
-        if (argc != 1)
-                return usage();
+        if (usage(argc != 1, argc, argv))
+                return;
         printf_P(PSTR("Outputs:\n"));
         ports_print(out_list, out.bitfield, NELEM(out_list));
 }
 
 void cmd_on_off(int argc, char* argv[]) {
-        if (argc != 2)
-                return usage();
+        if (usage(argc != 2, argc, argv))
+                return;
         if (check_manual()) {
                 for (size_t i = 0; i < NELEM(out_list); ++i) {
                         port_t port;
@@ -352,29 +359,33 @@ void cmd_on_off(int argc, char* argv[]) {
 }
 
 void cmd_mode(int argc, char* argv[]) {
-        if (argc == 2 && !strcmp_P(argv[1], PSTR("--manual"))) {
+        if (usage(0, argc, argv)) {
+                // nothing
+        } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--manual"))) {
                 manual = 1;
+                last_state = state = 0;
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--auto"))) {
-                manual = 0;
-                state = 0;
+                manual = last_state = state = 0;
                 ports_reset();
         } else if (argc == 1) {
                 printf_P(PSTR("%S mode is active\n"), manual ? PSTR("Manual") : PSTR("Automatic"));
         } else {
-                usage();
+                usage(1, argc, argv);
         }
 }
 
 void cmd_reset(int argc, char* argv[]) {
-        if (argc != 1)
-                return usage();
+        if (usage(argc != 1, argc, argv))
+                return;
         if (check_manual())
                 ports_reset();
 }
 
 void cmd_help(int argc, char* argv[]) {
         cmd_t cmd;
-        if (argc == 1) {
+        if (usage(0, argc, argv)) {
+                // nothing
+        } else if (argc == 1) {
                 printf_P(PSTR("List of commands:\n"));
                 for (size_t i = 0; i < NELEM(cmd_list); ++i) {
                         memcpy_P(&cmd, cmd_list + i, sizeof (cmd_t));
@@ -385,13 +396,13 @@ void cmd_help(int argc, char* argv[]) {
                 if (cmd_find(argv[1], &cmd))
                         printf_P(PSTR("Usage: %S %S\n%S\n"), cmd.name, cmd.args, cmd.help);
         } else {
-                usage();
+                usage(1, argc, argv);
         }
 }
 
 void cmd_version(int argc, char* argv[]) {
-        if (argc != 1)
-                return usage();
+        if (usage(argc != 1, argc, argv))
+                return;
         print_version();
 }
 

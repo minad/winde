@@ -29,12 +29,12 @@ IN (schalter5,          E,    6,   schalter_auskuppeln        )
 IN (schalter6,          B,    5,   schalter_auszugsbremse_auf )
 IN (in1,                D,    7,   bremse_getreten            )
 IN (in2,                D,    6,   gang_falsch                )
-IN (in3,                D,    5,                              )
+IN (in3,                D,    5,   parkbremse_gezogen         )
 IN (in4,                D,    4,   motor_aus                  )
 IN (in5,                D,    3,   motor_temp_zu_hoch         )
 IN (in6,                D,    2,   wandler_temp_zu_hoch       )
 IN (in7,                D,    1,   kappvorrichtung_falsch     )
-IN (in8,                D,    0,   parkbremse_falsch          )
+IN (in8,                D,    0,                              )
 IN (in9,                B,    7,                              )
 
 // Zustände des Automaten
@@ -54,7 +54,7 @@ STATE (fehler_motor_aus,    (RED)              )
 
 // Ereignisse, die Zustandsübergänge auslösen
 //    (Ereignisname,   Boolescher Ausdruck                                                    )
-EVENT (aufbau_ok,      !in.kappvorrichtung_falsch && !in.parkbremse_falsch && !in.gang_falsch )
+EVENT (aufbau_ok,      !in.kappvorrichtung_falsch && in.parkbremse_gezogen && !in.gang_falsch )
 EVENT (temp_ok,        !in.motor_temp_zu_hoch && !in.wandler_temp_zu_hoch                     )
 EVENT (schlepp_fertig, in.bremse_getreten && in.schalter_auskuppeln                           )
 
