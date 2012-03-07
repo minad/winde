@@ -103,7 +103,7 @@ const cmd_t PROGMEM cmd_list[] = {
 #include "config.h"
 };
 
-union {
+typedef union {
         struct {
 #define IN(name, port, bit, alias) uint8_t name  : 1;
 #include "config.h"
@@ -113,21 +113,9 @@ union {
 #include "config.h"
         };
         uint8_t bitfield[0];
-} in;
+} in_t;
 
-union {
-        struct {
-#define IN(name, port, bit, alias) uint8_t name  : 1;
-#include "config.h"
-        };
-        struct {
-#define IN(name, port, bit, alias) uint8_t alias : 1;
-#include "config.h"
-        };
-        uint8_t bitfield[0];
-} last_in;
-
-union {
+typedef union {
         struct {
 #define OUT(name, port, bit, alias) uint8_t name  : 1;
 #include "config.h"
@@ -137,7 +125,7 @@ union {
 #include "config.h"
         };
         uint8_t bitfield[0];
-} out;
+} out_t;
 
 const port_t PROGMEM in_list[] = {
 #define IN(name, port, bit, alias) \
@@ -150,6 +138,9 @@ const port_t PROGMEM out_list[] = {
         { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), PSTR_out_##name##_port },
 #include "config.h"
 };
+
+in_t  in, last_in;
+out_t out;
 
 uint8_t manual = 0, state = 0, last_state = 0, prompt_active = 0;
 
