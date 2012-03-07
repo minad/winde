@@ -370,9 +370,7 @@ void cmd_out(int argc, char* argv[]) {
 }
 
 void cmd_on_off(int argc, char* argv[]) {
-        if (usage(argc != 2, argc, argv))
-                return;
-        if (check_manual()) {
+        if (!usage(argc != 2, argc, argv) && check_manual()) {
                 for (size_t i = 0; i < NELEM(out_list); ++i) {
                         port_t port;
                         memcpy_P(&port, out_list + i, sizeof (port_t));
@@ -403,9 +401,7 @@ void cmd_mode(int argc, char* argv[]) {
 }
 
 void cmd_reset(int argc, char* argv[]) {
-        if (usage(argc != 1, argc, argv))
-                return;
-        if (check_manual())
+        if (!usage(argc != 1, argc, argv) && check_manual())
                 ports_reset();
 }
 
@@ -431,9 +427,8 @@ void cmd_help(int argc, char* argv[]) {
 }
 
 void cmd_version(int argc, char* argv[]) {
-        if (usage(argc != 1, argc, argv))
-                return;
-        print_version();
+        if (!usage(argc != 1, argc, argv))
+                print_version();
 }
 
 INLINE ringbuf_t* ringbuf_init(void* buf, uint8_t size) {
