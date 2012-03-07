@@ -70,15 +70,11 @@ des Mealy-Automaten erzeugt werden. Es wird die Datei "statemachine.pdf" erstell
 Fehler in der aktuellen Installation
 ------------------------------------
 
-TODO:
-- Buzzer piept zu oft, Entprellung
-- Latch zöflichkeit
-
 Fehlerliste:
+- Latch anschalten funktioniert wegen kaputter Lötstelle nicht
 - Zündungsfreigabe funktioniert nicht
 - Gangwarnung, Parkbremse sind nicht verschaltet
-- Wenn Ausgang "Auszugsbremse" an, geht auch eingang "Schalter Auszugsbremse" an
-- Und das bekannte Problem: Reboot beim Zünden
+- Reboot beim Zünden
+- Motor aus (in4) ist nicht verschaltet, ich hatte das mit GeneratorAus verschaltet, allerdings hat dann die Zündungsbrücke nicht mehr funktioniert. D.h. die Zündung auf der Windenseite war komplett wirkungslos, selbst bei Zündung aus ging das System an
+- WONTFIX Wenn Ausgang "Auszugsbremse" an, geht auch eingang "Schalter Auszugsbremse" an
 - WONTFIX Hardware-Flusskontrolle muss immer in der Software ausgeschaltet werden, vlt kann man rxready auf ready in version 2 setzen
-- FIXED Motor aus (in4) ist nicht verschaltet, ich hatte das mit GeneratorAus verschaltet, allerdings hat dann die Zündungsbrücke nicht
-mehr funktioniert. D.h. die Zündung auf der Windenseite war komplett wirkungslos, selbst bei Zündung aus ging das System an
