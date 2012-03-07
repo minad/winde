@@ -86,11 +86,6 @@ void         cmd_version(int argc, char* argv[]);
         IF_EMPTY(alias,, DEF_PSTR(in_##name##_alias, #alias))
 #include "config.h"
 
-const cmd_t PROGMEM cmd_list[] = {
-#define COMMAND(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
-#include "config.h"
-};
-
 typedef union {
         struct {
 #define IN(name, port, bit, alias) uint8_t name  : 1;
@@ -124,6 +119,11 @@ const port_t PROGMEM in_list[] = {
 const port_t PROGMEM out_list[] = {
 #define OUT(name, port, bit, alias) \
         { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), PSTR_out_##name##_port },
+#include "config.h"
+};
+
+const cmd_t PROGMEM cmd_list[] = {
+#define COMMAND(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
 #include "config.h"
 };
 
@@ -266,9 +266,9 @@ void backspace() {
 int check_usage(int wrong, int argc, char* argv[]) {
         if (wrong || (argc == 2 && !strcmp_P(argv[1], PSTR("--help")))) {
                 cmd_usage(argv[0]);
-                return 1;
+                return 0;
         }
-        return 0;
+        return 1;
 }
 
 void cmd_usage(const char* name) {
@@ -341,21 +341,21 @@ void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
 }
 
 void cmd_in(int argc, char* argv[]) {
-        if (check_usage(argc != 1, argc, argv))
-                return;
-        puts_P(PSTR("Inputs:"));
-        ports_print(in_list, in.bitfield, NELEM(in_list));
+        if (check_usage(argc != 1, argc, argv)) {
+                puts_P(PSTR("Inputs:"));
+                ports_print(in_list, in.bitfield, NELEM(in_list));
+        }
 }
 
 void cmd_out(int argc, char* argv[]) {
-        if (check_usage(argc != 1, argc, argv))
-                return;
-        puts_P(PSTR("Outputs:"));
-        ports_print(out_list, out.bitfield, NELEM(out_list));
+        if (check_usage(argc != 1, argc, argv)) {
+                puts_P(PSTR("Outputs:"));
+                ports_print(out_list, out.bitfield, NELEM(out_list));
+        }
 }
 
 void cmd_on_off(int argc, char* argv[]) {
-        if (!check_usage(argc != 2, argc, argv) && check_manual()) {
+        if (check_usage(argc != 2, argc, argv) && check_manual()) {
                 for (size_t i = 0; i < NELEM(out_list); ++i) {
                         port_t port;
                         memcpy_P(&port, out_list + i, sizeof (port_t));
@@ -370,7 +370,7 @@ void cmd_on_off(int argc, char* argv[]) {
 }
 
 void cmd_mode(int argc, char* argv[]) {
-        if (check_usage(0, argc, argv)) {
+        if (!check_usage(0, argc, argv)) {
                 // nothing
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--manual"))) {
                 manual = 1;
@@ -386,12 +386,12 @@ void cmd_mode(int argc, char* argv[]) {
 }
 
 void cmd_reset(int argc, char* argv[]) {
-        if (!check_usage(argc != 1, argc, argv) && check_manual())
+        if (check_usage(argc != 1, argc, argv) && check_manual())
                 ports_reset();
 }
 
 void cmd_help(int argc, char* argv[]) {
-        if (check_usage(0, argc, argv)) {
+        if (!check_usage(0, argc, argv)) {
                 // nothing
         } else if (argc == 1) {
                 puts_P(PSTR("List of commands:"));
@@ -409,7 +409,7 @@ void cmd_help(int argc, char* argv[]) {
 }
 
 void cmd_version(int argc, char* argv[]) {
-        if (!check_usage(argc != 1, argc, argv))
+        if (check_usage(argc != 1, argc, argv))
                 print_version();
 }
 
