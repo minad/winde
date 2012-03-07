@@ -236,10 +236,12 @@ const char* state_str(uint8_t state) {
 }
 
 void state_transition(uint8_t new_state) {
+        if (prompt_active) {
+                putchar('\n');
+                prompt_active = 0;
+        }
+        printf_P(PSTR("%S -> %S\n"), state_str(state), state_str(new_state));
         state = new_state;
-        printf_P(PSTR("%S%S -> %S\n"), prompt_active ? PSTR("\n") : PSTR_EMPTY,
-                 state_str(last_state), state_str(new_state));
-        prompt_active = 0;
 }
 
 void state_update() {
@@ -258,18 +260,17 @@ void state_update() {
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
 
-#define FALLING_EDGE(name) (last_in.name && !in.name)
 #define RISING_EDGE(name)  (!last_in.name && in.name)
 
         if (state != STATE_bremse_getreten) {
                 if (RISING_EDGE(schalter_einkuppeln_links) || RISING_EDGE(schalter_einkuppeln_rechts))
                         out.buzzer = 1;
-                else if (FALLING_EDGE(schalter_einkuppeln_links) || FALLING_EDGE(schalter_einkuppeln_rechts))
+                else if (!in.schalter_einkuppeln_links || !in.schalter_einkuppeln_rechts)
                         out.buzzer = 0;
         } else if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt) {
                 if (RISING_EDGE(schalter_auskuppeln))
                         out.buzzer = 1;
-                else if (FALLING_EDGE(schalter_auskuppeln))
+                else if (!in.schalter_auskuppeln)
                         out.buzzer = 0;
         } else {
                 out.buzzer = 0;
@@ -298,17 +299,17 @@ int usage(int show, int argc, char* argv[]) {
 
 int check_manual() {
         if (!manual)
-                printf_P(PSTR("Enable manual mode first with command 'mode --manual'.\n"));
+                puts_P(PSTR("Enable manual mode first with command 'mode --manual'."));
         return manual;
 }
 
 void print_version() {
-        printf_P(PSTR("\nSteuersoftware der Winde AFK-3\n"
-                      "  Version:       " VERSION "\n"
-                      "  Git-Version:   " GIT_VERSION "\n"
-                      "  Kompiliert am: " __DATE__ " " __TIME__ "\n"
-                      "  Elektronik:    Christian 'Paule' Schreiber\n"
-                      "  Software:      Daniel 'Teilchen' Mendler\n\n"));
+        puts_P(PSTR("\nSteuersoftware der Winde AFK-3\n"
+                    "  Version:       " VERSION "\n"
+                    "  Git-Version:   " GIT_VERSION "\n"
+                    "  Kompiliert am: " __DATE__ " " __TIME__ "\n"
+                    "  Elektronik:    Christian 'Paule' Schreiber\n"
+                    "  Software:      Daniel 'Teilchen' Mendler\n"));
 }
 
 INLINE void cmd_exec(char* line) {
@@ -359,14 +360,14 @@ void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
 void cmd_in(int argc, char* argv[]) {
         if (usage(argc != 1, argc, argv))
                 return;
-        printf_P(PSTR("Inputs:\n"));
+        puts_P(PSTR("Inputs:"));
         ports_print(in_list, in.bitfield, NELEM(in_list));
 }
 
 void cmd_out(int argc, char* argv[]) {
         if (usage(argc != 1, argc, argv))
                 return;
-        printf_P(PSTR("Outputs:\n"));
+        puts_P(PSTR("Outputs:"));
         ports_print(out_list, out.bitfield, NELEM(out_list));
 }
 
@@ -415,7 +416,7 @@ void cmd_help(int argc, char* argv[]) {
         if (usage(0, argc, argv)) {
                 // nothing
         } else if (argc == 1) {
-                printf_P(PSTR("List of commands:\n"));
+                puts_P(PSTR("List of commands:"));
                 for (size_t i = 0; i < NELEM(cmd_list); ++i) {
                         memcpy_P(&cmd, cmd_list + i, sizeof (cmd_t));
                         printf_P(PSTR("  %-16S %S\n"), cmd.name, cmd.help);
