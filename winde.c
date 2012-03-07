@@ -232,7 +232,7 @@ const char* state_str(uint8_t state) {
         switch (state) {
 #define STATE(name, attrs) case STATE_##name: return PSTR(#name);
 #include "config.h"
-        default: return PSTR("invalid");
+        default: return 0;
         }
 }
 
