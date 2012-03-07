@@ -250,7 +250,7 @@ void state_update() {
 
         last_state = state;
 
-#define EVENT(name, condition) int name = (condition);
+#define EVENT(name, condition) uint8_t name = (condition);
 #include "config.h"
 
         out.led_parkbremse = !in.parkbremse_gezogen;
@@ -504,7 +504,7 @@ int uart_putchar(char c, FILE* fp) {
 
 char* uart_gets() {
         static char line[LINE_SIZE];
-        static size_t size = 0;
+        static uint8_t size = 0;
         int c = ringbuf_getc(uart_rxbuf);
         switch (c) {
         case EOF:
