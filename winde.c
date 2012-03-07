@@ -71,8 +71,6 @@ void         cmd_reset(int argc, char* argv[]);
 void         cmd_help(int argc, char* argv[]);
 void         cmd_version(int argc, char* argv[]);
 
-ringbuf_t *uart_rxbuf, *uart_txbuf;
-
 #define DEF_PSTR(name, str) const char PSTR_##name[] PROGMEM = str;
 
 DEF_PSTR(PORT_FORMAT, "%-18S | %-28S | %-4S | %S\n")
@@ -139,15 +137,17 @@ const port_t PROGMEM out_list[] = {
 #include "config.h"
 };
 
-in_t  in, last_in;
-out_t out;
-
-uint8_t manual = 0, state = 0, last_state = 0, prompt_active = 0;
-
 enum {
 #define STATE(name, attrs) STATE_##name,
 #include "config.h"
 };
+
+ringbuf_t *uart_rxbuf, *uart_txbuf;
+
+in_t  in, last_in;
+out_t out;
+
+uint8_t manual = 0, state = 0, last_state = 0, prompt_active = 0;
 
 #define ACTION(name, code) INLINE void action_##name() { code }
 #include "config.h"
