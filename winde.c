@@ -83,6 +83,7 @@ DEF_PSTR(NAME,        "Name")
 DEF_PSTR(ALIAS,       "Alias")
 DEF_PSTR(PORT,        "Port")
 DEF_PSTR(ACTIVE,      "Active")
+DEF_PSTR(USAGE,       "Usage: %S %S\n")
 
 #define COMMAND(name, fn, args, help) \
         DEF_PSTR(cmd_##name##_name, #name) \
@@ -291,7 +292,7 @@ int usage(int show, int argc, char* argv[]) {
         if (show || (argc == 2 && !strcmp_P(argv[1], PSTR("--help")))) {
                 cmd_t cmd;
                 cmd_find(argv[0], &cmd);
-                printf_P(PSTR("Usage: %S %S\n"), cmd.name, cmd.args);
+                printf_P(PSTR_USAGE, cmd.name, cmd.args);
                 return 1;
         }
         return 0;
@@ -423,8 +424,10 @@ void cmd_help(int argc, char* argv[]) {
                 }
                 putchar('\n');
         } else if (argc == 2) {
-                if (cmd_find(argv[1], &cmd))
-                        printf_P(PSTR("Usage: %S %S\n%S\n"), cmd.name, cmd.args, cmd.help);
+                if (cmd_find(argv[1], &cmd)) {
+                        printf_P(PSTR_USAGE, cmd.name, cmd.args);
+                        puts_P(cmd.help);
+                }
         } else {
                 usage(1, argc, argv);
         }
