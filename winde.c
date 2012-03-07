@@ -204,7 +204,7 @@ void ports_reset() {
 }
 
 INLINE void ports_read() {
-        memcpy(&last_in, &in, sizeof (in));
+        last_in = in;
 #define IN(name, port, bit, alias) in.name = (PIN ## port >> bit) & 1;
 #include "config.h"
 }
@@ -230,14 +230,13 @@ void state_transition(uint8_t new_state) {
                 prompt_active = 0;
         }
         printf_P(PSTR("%S -> %S\n"), state_str(state), state_str(new_state));
+        last_state = state;
         state = new_state;
 }
 
 void state_update() {
         if (manual)
                 return;
-
-        last_state = state;
 
 #define EVENT(name, condition) uint8_t name = (condition);
 #include "config.h"
