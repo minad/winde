@@ -41,9 +41,8 @@ INLINE void  ports_read();
 INLINE void  ports_write();
 void         ports_print(const port_t* ports, const uint8_t* bitfield, size_t n);
 
-void         state_update();
+INLINE uint8_t state_update();
 const char*  state_str(uint8_t);
-void         state_transition(uint8_t);
 
 INLINE ringbuf_t* ringbuf_init(void* buf, uint8_t size);
 INLINE int   ringbuf_full(ringbuf_t* rb);
@@ -141,12 +140,12 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 in_t  in, last_in;
 out_t out;
 
-uint8_t manual = 0, state = 0, last_state = 0, prompt_active = 0;
+uint8_t manual = 0, state = 0, prompt_active = 0;
 
 #define ACTION(name, code) INLINE void action_##name() { code }
 #include "config.h"
 
-int main() {
+void main() {
         OSCCAL = 0xA1;
         ports_init();
         uart_init();
@@ -154,12 +153,19 @@ int main() {
         print_version();
         for (;;) {
                 ports_read();
-                state_update();
-                ports_write();
-                if (state == last_state)
+                uint8_t new_state = state_update();
+                if (new_state != state) {
+                        if (prompt_active) {
+                                putchar('\n');
+                                prompt_active = 0;
+                        }
+                        printf_P(PSTR("%S -> %S\n"), state_str(state), state_str(new_state));
+                        state = new_state;
+                } else {
                         cmd_handler();
+                }
+                ports_write();
         }
-        return 0;
 }
 
 INLINE int bitfield_get(const uint8_t* bitfield, size_t i) {
@@ -218,22 +224,9 @@ const char* state_str(uint8_t state) {
         }
 }
 
-void state_transition(uint8_t new_state) {
-        if (prompt_active) {
-                putchar('\n');
-                prompt_active = 0;
-        }
-        printf_P(PSTR("%S -> %S\n"), state_str(state), state_str(new_state));
-        last_state = state;
-        state = new_state;
-}
-
-void state_update() {
+INLINE uint8_t state_update() {
         if (manual)
-                return;
-
-#define EVENT(name, condition) uint8_t name = (condition);
-#include "config.h"
+                return state;
 
         out.led_parkbremse = !in.parkbremse_gezogen;
         out.led_kappvorrichtung = in.kappvorrichtung_falsch;
@@ -258,9 +251,14 @@ void state_update() {
                 out.buzzer = 0;
         }
 
-#define TRANSITION(initial, event, final, act, attrs) \
-        if (state == STATE_##initial && (event)) { state_transition(STATE_##final); IF_EMPTY(act,, action_##act()); return; }
+#define EVENT(name, condition) uint8_t name = (condition);
 #include "config.h"
+
+#define TRANSITION(initial, event, final, act, attrs) \
+        if (state == STATE_##initial && (event)) { IF_EMPTY(act,, action_##act()); return STATE_##final; }
+#include "config.h"
+
+        return state;
 }
 
 void backspace() {
@@ -374,9 +372,9 @@ void cmd_mode(int argc, char* argv[]) {
                 // nothing
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--manual"))) {
                 manual = 1;
-                last_state = state = 0;
+                state = 0;
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--auto"))) {
-                manual = last_state = state = 0;
+                manual = state = 0;
                 ports_reset();
         } else if (argc == 1) {
                 printf_P(PSTR("%S mode is active\n"), manual ? PSTR("Manual") : PSTR("Automatic"));
