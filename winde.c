@@ -74,12 +74,7 @@ void         cmd_version(int argc, char* argv[]);
 #define DEF_PSTR(name, str) const char PSTR_##name[] PROGMEM = str;
 
 DEF_PSTR(PORT_FORMAT, "%-18S | %-28S | %-4S | %S\n")
-DEF_PSTR(X,           "X")
 DEF_PSTR(EMPTY,       "")
-DEF_PSTR(NAME,        "Name")
-DEF_PSTR(ALIAS,       "Alias")
-DEF_PSTR(PORT,        "Port")
-DEF_PSTR(ACTIVE,      "Active")
 DEF_PSTR(USAGE,       "Usage: %S %S\n%S\n")
 
 #define COMMAND(name, fn, args, help) \
@@ -336,12 +331,12 @@ void cmd_handler() {
 }
 
 void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
-        printf_P(PSTR_PORT_FORMAT, PSTR_NAME, PSTR_ALIAS, PSTR_PORT, PSTR_ACTIVE);
+        printf_P(PSTR_PORT_FORMAT, PSTR("Name"), PSTR("Alias"), PSTR("Port"), PSTR("Active"));
         for (size_t i = 0; i < n; ++i) {
                 port_t port;
                 memcpy_P(&port, port_list + i, sizeof (port_t));
                 printf_P(PSTR_PORT_FORMAT, port.name, port.alias ? port.alias : PSTR_EMPTY,
-                         port.port, bitfield_get(bitfield, i) ? PSTR_X : PSTR_EMPTY);
+                         port.port, bitfield_get(bitfield, i) ? PSTR("X") : PSTR_EMPTY);
         }
         putchar('\n');
 }
