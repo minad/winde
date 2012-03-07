@@ -6,7 +6,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
-#include <avr/wdt.h>
 #include <util/delay.h>
 #include "pp.h"
 
@@ -167,7 +166,6 @@ int main() {
         ports_init();
         uart_init();
         sei();
-        wdt_enable(WDTO_500MS);
         print_version();
         for (;;) {
                 ports_read();
@@ -175,7 +173,6 @@ int main() {
                 ports_write();
                 if (state == last_state)
                         cmd_handler();
-                wdt_reset();
         }
         return 0;
 }
@@ -498,8 +495,9 @@ void uart_init() {
 int uart_putchar(char c, FILE* fp) {
         if (c == '\n')
                 uart_putchar('\r', fp);
-        while (ringbuf_full(uart_txbuf))
-                wdt_reset(); // wait, reset watchdog
+        while (ringbuf_full(uart_txbuf)) {
+                // wait, do nothing
+        }
         ringbuf_putc(uart_txbuf, c);
         UCSR0B |= (1 << UDRIE);
         return 0;
