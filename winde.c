@@ -10,7 +10,7 @@
 #include "pp.h"
 
 #define BAUD           19200
-#define MAX_ARGS       4
+#define MAX_ARGS       2
 #define RINGBUF_RXSIZE 16
 #define RINGBUF_TXSIZE 64
 #define LINE_SIZE      80
@@ -57,7 +57,7 @@ int          uart_putchar(char c, FILE* fp);
 char*        uart_gets();
 
 void         backspace();
-int          usage(int, int, char*[]);
+int          help(int, int, char*[]);
 int          check_manual();
 void         print_version();
 void         cmd_handler();
@@ -80,7 +80,7 @@ DEF_PSTR(NAME,        "Name")
 DEF_PSTR(ALIAS,       "Alias")
 DEF_PSTR(PORT,        "Port")
 DEF_PSTR(ACTIVE,      "Active")
-DEF_PSTR(USAGE,       "Usage: %S %S\n")
+DEF_PSTR(USAGE,       "Usage: %S %S\n%S\n")
 
 #define COMMAND(name, fn, args, help) \
         DEF_PSTR(cmd_##name##_name, #name) \
@@ -276,11 +276,11 @@ void backspace() {
         putchar('\b');
 }
 
-int usage(int show, int argc, char* argv[]) {
+int help(int show, int argc, char* argv[]) {
         if (show || (argc == 2 && !strcmp_P(argv[1], PSTR("--help")))) {
                 cmd_t cmd;
                 cmd_find(argv[0], &cmd);
-                printf_P(PSTR_USAGE, cmd.name, cmd.args);
+                printf_P(PSTR_USAGE, cmd.name, cmd.args, cmd.help);
                 return 1;
         }
         return 0;
@@ -309,6 +309,7 @@ INLINE void cmd_exec(char* line) {
                 if (!(argv[argc] = strsep_P(&line, PSTR(" "))) || *argv[argc] == '\0')
                         break;
         }
+
         if (argc > 0 && cmd_find(argv[0], &cmd))
                 cmd.fn(argc, argv);
 }
@@ -347,21 +348,21 @@ void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
 }
 
 void cmd_in(int argc, char* argv[]) {
-        if (usage(argc != 1, argc, argv))
+        if (help(argc != 1, argc, argv))
                 return;
         puts_P(PSTR("Inputs:"));
         ports_print(in_list, in.bitfield, NELEM(in_list));
 }
 
 void cmd_out(int argc, char* argv[]) {
-        if (usage(argc != 1, argc, argv))
+        if (help(argc != 1, argc, argv))
                 return;
         puts_P(PSTR("Outputs:"));
         ports_print(out_list, out.bitfield, NELEM(out_list));
 }
 
 void cmd_on_off(int argc, char* argv[]) {
-        if (!usage(argc != 2, argc, argv) && check_manual()) {
+        if (!help(argc != 2, argc, argv) && check_manual()) {
                 for (size_t i = 0; i < NELEM(out_list); ++i) {
                         port_t port;
                         memcpy_P(&port, out_list + i, sizeof (port_t));
@@ -376,7 +377,7 @@ void cmd_on_off(int argc, char* argv[]) {
 }
 
 void cmd_mode(int argc, char* argv[]) {
-        if (usage(0, argc, argv)) {
+        if (help(0, argc, argv)) {
                 // nothing
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--manual"))) {
                 manual = 1;
@@ -387,18 +388,18 @@ void cmd_mode(int argc, char* argv[]) {
         } else if (argc == 1) {
                 printf_P(PSTR("%S mode is active\n"), manual ? PSTR("Manual") : PSTR("Automatic"));
         } else {
-                usage(1, argc, argv);
+                help(1, argc, argv);
         }
 }
 
 void cmd_reset(int argc, char* argv[]) {
-        if (!usage(argc != 1, argc, argv) && check_manual())
+        if (!help(argc != 1, argc, argv) && check_manual())
                 ports_reset();
 }
 
 void cmd_help(int argc, char* argv[]) {
         cmd_t cmd;
-        if (usage(0, argc, argv)) {
+        if (help(0, argc, argv)) {
                 // nothing
         } else if (argc == 1) {
                 puts_P(PSTR("List of commands:"));
@@ -408,17 +409,15 @@ void cmd_help(int argc, char* argv[]) {
                 }
                 putchar('\n');
         } else if (argc == 2) {
-                if (cmd_find(argv[1], &cmd)) {
-                        printf_P(PSTR_USAGE, cmd.name, cmd.args);
-                        puts_P(cmd.help);
-                }
+                if (cmd_find(argv[1], &cmd))
+                        printf_P(PSTR_USAGE, cmd.name, cmd.args, cmd.help);
         } else {
-                usage(1, argc, argv);
+                help(1, argc, argv);
         }
 }
 
 void cmd_version(int argc, char* argv[]) {
-        if (!usage(argc != 1, argc, argv))
+        if (!help(argc != 1, argc, argv))
                 print_version();
 }
 

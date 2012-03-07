@@ -114,5 +114,5 @@ COMMAND (on,      on_off,   "<port>",            "Set port on"                  
 COMMAND (off,     on_off,   "<port>",            "Set port off"                                     )
 COMMAND (mode,    mode,     "[--auto|--manual]", "Print or switch between automatic or manual mode" )
 COMMAND (reset,   reset,    "",                  "Reset output ports"                               )
-COMMAND (help,    help,     "[cmd]",             "Print this help"                                  )
+COMMAND (help,    help,     "[command]",         "Print this help"                                  )
 COMMAND (version, version,  "",                  "Print version"                                    )
