@@ -46,7 +46,7 @@ INLINE void  ports_read();
 INLINE void  ports_write();
 void         ports_print(const port_t* ports, const uint8_t* bitfield, size_t n);
 
-INLINE uint8_t state_update();
+uint8_t      state_update();
 const char*  state_str(uint8_t state);
 
 INLINE ringbuf_t* ringbuf_init(void* buf, uint8_t size);
@@ -225,7 +225,7 @@ const char* state_str(uint8_t state) {
         return 0;
 }
 
-INLINE uint8_t state_update() {
+uint8_t state_update() {
         if (manual)
                 return state;
 
@@ -236,19 +236,24 @@ INLINE uint8_t state_update() {
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
 
+        static uint8_t fehler = 0;
+
         if (state != STATE_bremse_getreten) {
                 if (RISING_EDGE(schalter_einkuppeln_links) || RISING_EDGE(schalter_einkuppeln_rechts))
-                        out.buzzer = 1;
-                else if (!in.schalter_einkuppeln_links || !in.schalter_einkuppeln_rechts)
-                        out.buzzer = 0;
-        } else if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt) {
-                if (RISING_EDGE(schalter_auskuppeln))
-                        out.buzzer = 1;
-                else if (!in.schalter_auskuppeln)
-                        out.buzzer = 0;
-        } else {
-                out.buzzer = 0;
+                        fehler |= 1;
+                else if (!in.schalter_einkuppeln_links && !in.schalter_einkuppeln_rechts)
+                        fehler &= ~1;
         }
+
+        if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt) {
+                if (RISING_EDGE(schalter_auskuppeln))
+                        fehler |= 2;
+                else if (!in.schalter_auskuppeln)
+                        fehler &= ~2;
+        }
+
+        out.buzzer = fehler ? 1 : 0;
+
 
 #define EVENT(name, condition) uint8_t name = (condition);
 #include "generate.h"
