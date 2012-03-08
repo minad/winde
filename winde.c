@@ -89,6 +89,11 @@ void         cmd_version(int argc, char* argv[]);
         IF_EMPTY(alias,, DEF_PSTR(in_##name##_alias, #alias))
 #include "generate.h"
 
+enum {
+#define STATE(name, attrs) STATE_##name,
+#include "generate.h"
+};
+
 typedef union {
         struct {
 #define IN(name, port, bit, alias) uint8_t name  : 1;
@@ -127,11 +132,6 @@ const port_t PROGMEM out_list[] = {
 
 const cmd_t PROGMEM cmd_list[] = {
 #define COMMAND(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
-#include "generate.h"
-};
-
-enum {
-#define STATE(name, attrs) STATE_##name,
 #include "generate.h"
 };
 
