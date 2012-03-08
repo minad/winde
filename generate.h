@@ -18,7 +18,7 @@
 #  define EVENT(name, condition)
 #endif
 #ifndef TRANSITION
-#  define TRANSITION(initial, event, final, attrs, action)
+#  define TRANSITION(initial, event, final, action, attrs)
 #endif
 #ifndef COMMAND
 #  define COMMAND(name, fn, args, help)
