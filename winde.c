@@ -140,7 +140,14 @@ ringbuf_t *uart_rxbuf, *uart_txbuf;
 in_t  in, last_in;
 out_t out;
 
-uint8_t manual = 0, state = 0, prompt_active = 0;
+struct {
+        uint8_t manual            : 1;
+        uint8_t prompt_active     : 1;
+        uint8_t fehler_einkuppeln : 1;
+        uint8_t fehler_auskuppeln : 1;
+} flag;
+
+uint8_t state = 0;
 
 #define ACTION(name, code) INLINE void action_##name() { code }
 #include "generate.h"
@@ -155,9 +162,9 @@ int main() {
                 ports_read();
                 uint8_t new_state = state_update();
                 if (new_state != state) {
-                        if (prompt_active) {
+                        if (flag.prompt_active) {
                                 putchar('\n');
-                                prompt_active = 0;
+                                flag.prompt_active = 0;
                         }
                         printf_P(PSTR("%S -> %S\n"), state_str(state), state_str(new_state));
                         state = new_state;
@@ -226,7 +233,7 @@ const char* state_str(uint8_t state) {
 }
 
 uint8_t state_update() {
-        if (manual)
+        if (flag.manual)
                 return state;
 
         out.led_parkbremse = !in.parkbremse_gezogen;
@@ -236,23 +243,21 @@ uint8_t state_update() {
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
 
-        static uint8_t fehler = 0;
-
         if (state != STATE_bremse_getreten) {
                 if (RISING_EDGE(schalter_einkuppeln_links) || RISING_EDGE(schalter_einkuppeln_rechts))
-                        fehler |= 1;
+                        flag.fehler_einkuppeln = 1;
                 else if (!in.schalter_einkuppeln_links && !in.schalter_einkuppeln_rechts)
-                        fehler &= ~1;
+                        flag.fehler_einkuppeln = 0;
         }
 
         if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt) {
                 if (RISING_EDGE(schalter_auskuppeln))
-                        fehler |= 2;
+                        flag.fehler_auskuppeln = 1;
                 else if (!in.schalter_auskuppeln)
-                        fehler &= ~2;
+                        flag.fehler_auskuppeln = 0;
         }
 
-        out.buzzer = fehler ? 1 : 0;
+        out.buzzer = flag.fehler_einkuppeln | flag.fehler_auskuppeln;
 
 
 #define EVENT(name, condition) uint8_t name = (condition);
@@ -286,9 +291,9 @@ void cmd_usage(const char* name) {
 }
 
 int check_manual() {
-        if (!manual)
+        if (!flag.manual)
                 puts_P(PSTR("Enable manual mode first with command 'mode --manual'."));
-        return manual;
+        return flag.manual;
 }
 
 void print_version() {
@@ -324,14 +329,14 @@ const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
 }
 
 void cmd_handler() {
-        if (!prompt_active) {
-                printf_P(PSTR("%S $ "), manual ? PSTR("MANUAL") : state_str(state));
-                prompt_active = 1;
+        if (!flag.prompt_active) {
+                printf_P(PSTR("%S $ "), flag.manual ? PSTR("MANUAL") : state_str(state));
+                flag.prompt_active = 1;
         }
         char* line = uart_gets();
         if (line) {
                 cmd_exec(line);
-                prompt_active = 0;
+                flag.prompt_active = 0;
         }
 }
 
@@ -381,13 +386,14 @@ void cmd_mode(int argc, char* argv[]) {
         if (!check_usage(0, argc, argv)) {
                 // nothing
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--manual"))) {
-                manual = 1;
+                flag.manual = 1;
                 state = 0;
         } else if (argc == 2 && !strcmp_P(argv[1], PSTR("--auto"))) {
-                manual = state = 0;
+                flag.manual = 0;
+                state = 0;
                 ports_reset();
         } else if (argc == 1) {
-                printf_P(PSTR("%S mode is active\n"), manual ? PSTR("Manual") : PSTR("Automatic"));
+                printf_P(PSTR("%S mode is active\n"), flag.manual ? PSTR("Manual") : PSTR("Automatic"));
         } else {
                 cmd_usage(argv[0]);
         }
