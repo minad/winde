@@ -17,7 +17,7 @@
 #define RINGBUF_TXSIZE 64
 #define LINE_SIZE      80
 
-#define NELEM(array)           (sizeof (array) / sizeof (array[0]))
+#define ARRAY_SIZE(array)      (sizeof (array) / sizeof (array[0]))
 #define RISING_EDGE(name)      (!last_in.name && in.name)
 #define DEF_PSTR(name, string) static const char PSTR_##name[] PROGMEM = string;
 // inline can be commented out to check function size with avr-nm
@@ -309,7 +309,7 @@ INLINE void cmd_exec(char* line) {
 }
 
 const cmd_t* cmd_find(const char* name, cmd_t* cmd) {
-        for (size_t i = 0; i < NELEM(cmd_list); ++i) {
+        for (size_t i = 0; i < ARRAY_SIZE(cmd_list); ++i) {
                 memcpy_P(cmd, cmd_list + i, sizeof (cmd_t));
                 if (!strcmp_P(name, cmd->name))
                         return cmd_list + i;
@@ -346,20 +346,20 @@ void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
 void cmd_in(int argc, char* argv[]) {
         if (check_usage(argc != 1, argc, argv)) {
                 puts_P(PSTR("Inputs:"));
-                ports_print(in_list, in.bitfield, NELEM(in_list));
+                ports_print(in_list, in.bitfield, ARRAY_SIZE(in_list));
         }
 }
 
 void cmd_out(int argc, char* argv[]) {
         if (check_usage(argc != 1, argc, argv)) {
                 puts_P(PSTR("Outputs:"));
-                ports_print(out_list, out.bitfield, NELEM(out_list));
+                ports_print(out_list, out.bitfield, ARRAY_SIZE(out_list));
         }
 }
 
 void cmd_on_off(int argc, char* argv[]) {
         if (check_usage(argc != 2, argc, argv) && check_manual()) {
-                for (size_t i = 0; i < NELEM(out_list); ++i) {
+                for (size_t i = 0; i < ARRAY_SIZE(out_list); ++i) {
                         port_t port;
                         memcpy_P(&port, out_list + i, sizeof (port_t));
                         if (!strcmp_P(argv[1], port.name) ||
@@ -399,7 +399,7 @@ void cmd_help(int argc, char* argv[]) {
         } else if (argc == 1) {
                 puts_P(PSTR("List of commands:"));
                 cmd_t cmd;
-                for (size_t i = 0; i < NELEM(cmd_list); ++i) {
+                for (size_t i = 0; i < ARRAY_SIZE(cmd_list); ++i) {
                         memcpy_P(&cmd, cmd_list + i, sizeof (cmd_t));
                         printf_P(PSTR("  %-16S %S\n"), cmd.name, cmd.help);
                 }
