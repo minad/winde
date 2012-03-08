@@ -221,8 +221,8 @@ const char* state_str(uint8_t state) {
         switch (state) {
 #define STATE(name, attrs) case STATE_##name: return PSTR(#name);
 #include "generate.h"
-        default: return 0;
         }
+        return 0;
 }
 
 INLINE uint8_t state_update() {
