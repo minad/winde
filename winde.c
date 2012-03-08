@@ -239,7 +239,7 @@ uint8_t state_update() {
         out.led_parkbremse = !in.parkbremse_gezogen;
         out.led_kappvorrichtung = in.kappvorrichtung_falsch;
         out.led_gangwarnung = in.gang_falsch;
-        out.led_power = in.motor_aus;
+        out.led_power = !in.motor_an;
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
         out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
 
@@ -248,6 +248,8 @@ uint8_t state_update() {
                         flag.fehler_einkuppeln = 1;
                 else if (!in.schalter_einkuppeln_links && !in.schalter_einkuppeln_rechts)
                         flag.fehler_einkuppeln = 0;
+        } else {
+                flag.fehler_einkuppeln = 0;
         }
 
         if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt) {
@@ -255,10 +257,11 @@ uint8_t state_update() {
                         flag.fehler_auskuppeln = 1;
                 else if (!in.schalter_auskuppeln)
                         flag.fehler_auskuppeln = 0;
+        } else {
+                flag.fehler_auskuppeln = 0;
         }
 
         out.buzzer = flag.fehler_einkuppeln | flag.fehler_auskuppeln;
-
 
 #define EVENT(name, condition) uint8_t name = (condition);
 #include "generate.h"
