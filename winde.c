@@ -47,7 +47,7 @@ INLINE void  ports_write();
 void         ports_print(const port_t* ports, const uint8_t* bitfield, size_t n);
 
 INLINE uint8_t state_update();
-const char*  state_str(uint8_t);
+const char*  state_str(uint8_t state);
 
 INLINE ringbuf_t* ringbuf_init(void* buf, uint8_t size);
 INLINE int   ringbuf_full(ringbuf_t* rb);
@@ -60,13 +60,13 @@ int          uart_putchar(char c, FILE* fp);
 char*        uart_gets();
 
 void         backspace();
-int          check_usage(int, int, char*[]);
+int          check_usage(int wrong, int argc, char* argv[]);
 int          check_manual();
 void         print_version();
 void         cmd_handler();
 INLINE void  cmd_exec(char*);
-const cmd_t* cmd_find(const char*, cmd_t*);
-void         cmd_usage(const char*);
+const cmd_t* cmd_find(const char* name, cmd_t* cmd);
+void         cmd_usage(const char* name);
 void         cmd_in(int argc, char* argv[]);
 void         cmd_out(int argc, char* argv[]);
 void         cmd_on_off(int argc, char* argv[]);
