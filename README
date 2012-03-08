@@ -59,7 +59,7 @@ Deaktivieren der HW-Flusskontrolle in minicom nicht vergessen!
 Konfiguration der Windensoftware
 --------------------------------
 
-Die Konfiguration der Windensoftware befindet sich in der Datei "config".
+Die Konfiguration der Windensoftware befindet sich in der Datei "config.h".
 
 Statemachine-Diagramme
 ----------------------

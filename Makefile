@@ -3,7 +3,7 @@ WIDTH=2.5
 
 all: statemachine.pdf statemachine.png statemachine.svg
 
-statemachine.%: states.dot config config.h pp.h
+statemachine.%: states.dot generate.h config.h pp.h
 	cpp $< | dot -Nwidth=$(WIDTH) -T $(subst statemachine.,,$@) -o $@
 
 clean:

@@ -1,31 +1,122 @@
-#ifndef OUT
-#  define OUT(name, port, bit, alias)
-#endif
-#ifndef IN
-#  define IN(name, port, bit, alias)
-#endif
-#ifndef STATE
-#  define STATE(name, attrs)
-#endif
-#ifndef ACTION
-#  define ACTION(name, code)
-#endif
-#ifndef EVENT
-#  define EVENT(name, condition)
-#endif
-#ifndef TRANSITION
-#  define TRANSITION(initial, event, final, attrs, action)
-#endif
-#ifndef COMMAND
-#  define COMMAND(name, fn, args, help)
-#endif
+/**
+ * @file
+ */
 
-#include "config"
+// Konfiguration der Ausgänge
+//  (Name,              Port, Bit, Alias)
+OUT (led1,              A,    7,   led_theta               )
+OUT (led2,              A,    6,   led_kappvorrichtung     )
+OUT (led3,              A,    5,   led_power               )
+OUT (led4,              A,    4,   led_gangwarnung         )
+OUT (led5,              A,    3,   led_parkbremse          )
+OUT (led6,              A,    2,   led_eingekuppelt_links  )
+OUT (led7,              A,    1,   led_eingekuppelt_rechts )
+OUT (led8,              A,    0,   drehlampe               )
+OUT (buzzer,            F,    2,                           )
+OUT (latch_aus,         B,    6,                           )
+OUT (zuendungsbruecke,  C,    0,                           ) // Zündung überbrücken, wenn 1 kann Zündung nicht mehr ausgemacht werden
+OUT (zuendungsfreigabe, C,    1,                           )
+OUT (out1,              C,    2,                           )
+OUT (out2,              C,    3,                           )
+OUT (out3,              C,    4,   einkuppeln_links        )
+OUT (out4,              C,    5,   einkuppeln_rechts       )
+OUT (out5,              C,    6,   trommelbremse_zu        )
+OUT (out6,              C,    7,   auszugsbremse_auf       )
 
-#undef OUT
-#undef IN
-#undef STATE
-#undef ACTION
-#undef EVENT
-#undef TRANSITION
-#undef COMMAND
+// Konfiguration der Eingänge
+// (Name,               Port, Bit, Alias                      )
+IN (schalter1,          E,    2,                              )
+IN (schalter2,          E,    3,                              )
+IN (schalter3,          E,    4,   schalter_einkuppeln_links  )
+IN (schalter4,          E,    5,   schalter_einkuppeln_rechts )
+IN (schalter5,          E,    6,   schalter_auskuppeln        )
+IN (schalter6,          B,    5,   schalter_auszugsbremse_auf )
+IN (in1,                D,    7,   bremse_getreten            )
+IN (in2,                D,    6,   gang_falsch                )
+IN (in3,                D,    5,   parkbremse_gezogen         )
+IN (in4,                D,    4,   motor_aus                  )
+IN (in5,                D,    3,   motor_temp_zu_hoch         )
+IN (in6,                D,    2,   wandler_temp_zu_hoch       )
+IN (in7,                D,    1,   kappvorrichtung_falsch     )
+IN (in8,                D,    0,                              )
+IN (in9,                B,    7,                              )
+
+// Zustände des Automaten
+//    (Zustandsname,        Graphviz-Attribute )
+STATE (start,               ()                 )
+STATE (trommeln_gebremst,   ()                 )
+STATE (aufbau_ok,           ()                 )
+STATE (temp_ok,             ()                 )
+STATE (motor_an,            ()                 )
+STATE (bremse_getreten,     ()                 )
+STATE (links_eingekuppelt,  ()                 )
+STATE (rechts_eingekuppelt, ()                 )
+STATE (schlepp_links,       ()                 )
+STATE (schlepp_rechts,      ()                 )
+STATE (fehler_motor_an,     (RED)              )
+STATE (fehler_motor_aus,    (RED)              )
+
+// Ereignisse, die Zustandsübergänge auslösen
+//    (Ereignisname,   Boolescher Ausdruck                                                    )
+EVENT (aufbau_ok,      !in.kappvorrichtung_falsch && in.parkbremse_gezogen && !in.gang_falsch )
+EVENT (temp_ok,        !in.motor_temp_zu_hoch && !in.wandler_temp_zu_hoch                     )
+EVENT (schlepp_fertig, in.bremse_getreten && in.schalter_auskuppeln                           )
+
+// Aktionen beim Betreten eines Zustands
+//     (Aktionsname,          Code-Block                                                    )
+ACTION (links_einkuppeln,     out.einkuppeln_links = out.led_eingekuppelt_links = 1;
+                              out.trommelbremse_zu = 0;                                     )
+ACTION (rechts_einkuppeln,    out.einkuppeln_rechts = 1; out.led_eingekuppelt_rechts = 1;
+                              out.trommelbremse_zu = 0;                                     )
+ACTION (auskuppeln,           out.einkuppeln_links = out.einkuppeln_rechts =
+                              out.led_eingekuppelt_links = out.led_eingekuppelt_rechts = 0;
+                              out.trommelbremse_zu = 1;
+			      out.latch_aus = 0;                                            )
+ACTION (latch_ausschalten,    out.latch_aus = 1;                                            )
+ACTION (zuendung_freigeben,   out.zuendungsfreigabe = 1;                                    )
+ACTION (zuendung_sperren,     out.zuendungsfreigabe = 0;                                    )
+ACTION (trommelbremse_zu,     out.trommelbremse_zu = 1; out.auszugsbremse_auf = 1;          )
+ACTION (zuendungsbruecke_an,  out.zuendungsbruecke = 1;                                     )
+ACTION (zuendungsbruecke_aus, out.zuendungsbruecke = 0;                                     )
+
+// Übergänge zwischen Zuständen
+//         (Anfangszustand,      Ereignis (Boolescher Ausdurck), Endzustand,          Aktion,               Graphviz-Attribute )
+TRANSITION (start,               1,                              trommeln_gebremst,   trommelbremse_zu,     (GREEN)            )
+TRANSITION (trommeln_gebremst,   aufbau_ok,                      aufbau_ok,           ,                     (GREEN)            )
+TRANSITION (aufbau_ok,           !aufbau_ok,                     trommeln_gebremst,   ,                     (BLUE)             )
+TRANSITION (aufbau_ok,           temp_ok,                        temp_ok,             zuendung_freigeben,   (GREEN)            )
+TRANSITION (temp_ok,             !in.motor_aus,                  motor_an,            zuendungsbruecke_an,  (GREEN)            )
+TRANSITION (temp_ok,             !temp_ok,                       aufbau_ok,           zuendung_sperren,     (BLUE)             )
+TRANSITION (temp_ok,             !aufbau_ok,                     trommeln_gebremst,   zuendung_sperren,     (RED)              )
+TRANSITION (motor_an,            in.bremse_getreten,             bremse_getreten,     ,                     (GREEN)            )
+TRANSITION (motor_an,            in.motor_aus,                   temp_ok,             zuendungsbruecke_aus, (BLUE)             )
+TRANSITION (motor_an,            !aufbau_ok,                     fehler_motor_an,     ,                     (RED)              )
+TRANSITION (bremse_getreten,     !in.bremse_getreten,            motor_an,            ,                     (BLUE)             )
+TRANSITION (bremse_getreten,     in.motor_aus,                   fehler_motor_aus,    ,                     (RED)              )
+TRANSITION (bremse_getreten,     in.schalter_einkuppeln_links,   links_eingekuppelt,  links_einkuppeln,     (GREEN)            )
+TRANSITION (bremse_getreten,     in.schalter_einkuppeln_rechts,  rechts_eingekuppelt, rechts_einkuppeln,    (GREEN)            )
+TRANSITION (bremse_getreten,     !aufbau_ok,                     fehler_motor_an,     ,                     (RED)              )
+TRANSITION (links_eingekuppelt,  in.schalter_auskuppeln,         bremse_getreten,     auskuppeln,           (BLUE)             )
+TRANSITION (links_eingekuppelt,  in.motor_aus,                   fehler_motor_aus,    auskuppeln,           (RED)              )
+TRANSITION (rechts_eingekuppelt, in.schalter_auskuppeln,         bremse_getreten,     auskuppeln,           (BLUE)             )
+TRANSITION (rechts_eingekuppelt, in.motor_aus,                   fehler_motor_aus,    auskuppeln,           (RED)              )
+TRANSITION (links_eingekuppelt,  !in.bremse_getreten,            schlepp_links,       latch_ausschalten,    (GREEN)            )
+TRANSITION (rechts_eingekuppelt, !in.bremse_getreten,            schlepp_rechts,      latch_ausschalten,    (GREEN)            )
+TRANSITION (schlepp_links,       schlepp_fertig,                 bremse_getreten,     auskuppeln,           (GREEN)            )
+TRANSITION (schlepp_rechts,      schlepp_fertig,                 bremse_getreten,     auskuppeln,           (GREEN)            )
+TRANSITION (links_eingekuppelt,  !aufbau_ok,                     fehler_motor_an,     auskuppeln,           (RED)              )
+TRANSITION (rechts_eingekuppelt, !aufbau_ok,                     fehler_motor_an,     auskuppeln,           (RED)              )
+TRANSITION (fehler_motor_an,     aufbau_ok,                      motor_an,            ,                     ()                 )
+TRANSITION (fehler_motor_an,     in.motor_aus,                   fehler_motor_aus,    ,                     (RED)              )
+TRANSITION (fehler_motor_aus,    1,                              temp_ok,             zuendungsbruecke_aus, ()                 )
+
+// Kommandos der Debug-Schnittstelle
+//      (Name,    Funktion, Argumente,           Hilfe                                              )
+COMMAND (in,      in,       "",                  "Print list of input ports"                        )
+COMMAND (out,     out,      "",                  "Print list of output ports"                       )
+COMMAND (on,      on_off,   "<port>",            "Set port on"                                      )
+COMMAND (off,     on_off,   "<port>",            "Set port off"                                     )
+COMMAND (mode,    mode,     "[--auto|--manual]", "Print or switch between automatic or manual mode" )
+COMMAND (reset,   reset,    "",                  "Reset output ports"                               )
+COMMAND (help,    help,     "[command]",         "Print this help"                                  )
+COMMAND (version, version,  "",                  "Print version"                                    )

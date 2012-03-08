@@ -87,16 +87,16 @@ void         cmd_version(int argc, char* argv[]);
         DEF_PSTR(in_##name##_name, #name) \
         DEF_PSTR(in_##name##_port, #port#bit) \
         IF_EMPTY(alias,, DEF_PSTR(in_##name##_alias, #alias))
-#include "config.h"
+#include "generate.h"
 
 typedef union {
         struct {
 #define IN(name, port, bit, alias) uint8_t name  : 1;
-#include "config.h"
+#include "generate.h"
         };
         struct {
 #define IN(name, port, bit, alias) uint8_t alias : 1;
-#include "config.h"
+#include "generate.h"
         };
         uint8_t bitfield[0];
 } in_t;
@@ -104,11 +104,11 @@ typedef union {
 typedef union {
         struct {
 #define OUT(name, port, bit, alias) uint8_t name  : 1;
-#include "config.h"
+#include "generate.h"
         };
         struct {
 #define OUT(name, port, bit, alias) uint8_t alias : 1;
-#include "config.h"
+#include "generate.h"
         };
         uint8_t bitfield[0];
 } out_t;
@@ -116,23 +116,23 @@ typedef union {
 const port_t PROGMEM in_list[] = {
 #define IN(name, port, bit, alias) \
         { PSTR_in_##name##_name, IF_EMPTY(alias, 0, PSTR_in_##name##_alias), PSTR_in_##name##_port },
-#include "config.h"
+#include "generate.h"
 };
 
 const port_t PROGMEM out_list[] = {
 #define OUT(name, port, bit, alias) \
         { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), PSTR_out_##name##_port },
-#include "config.h"
+#include "generate.h"
 };
 
 const cmd_t PROGMEM cmd_list[] = {
 #define COMMAND(name, fn, args, help) { cmd_##fn, PSTR_cmd_##name##_name, PSTR_cmd_##name##_args, PSTR_cmd_##name##_help },
-#include "config.h"
+#include "generate.h"
 };
 
 enum {
 #define STATE(name, attrs) STATE_##name,
-#include "config.h"
+#include "generate.h"
 };
 
 ringbuf_t *uart_rxbuf, *uart_txbuf;
@@ -143,7 +143,7 @@ out_t out;
 uint8_t manual = 0, state = 0, prompt_active = 0;
 
 #define ACTION(name, code) INLINE void action_##name() { code }
-#include "config.h"
+#include "generate.h"
 
 int main() {
         OSCCAL = 0xA1;
@@ -184,7 +184,7 @@ INLINE void ports_init() {
         ports_reset();
 
 #define OUT(name, port, bit, alias) DDR ## port |= (1 << bit);
-#include "config.h"
+#include "generate.h"
 }
 
 void ports_reset() {
@@ -207,20 +207,20 @@ void ports_reset() {
 INLINE void ports_read() {
         last_in = in;
 #define IN(name, port, bit, alias) in.name = (PIN ## port >> bit) & 1;
-#include "config.h"
+#include "generate.h"
 }
 
 INLINE void ports_write() {
 #define OUT(name, port, bit, alias) \
         if (out.name) { PORT ## port |= (1 << bit); } \
         else { PORT ## port &= ~(1 << bit); }
-#include "config.h"
+#include "generate.h"
 }
 
 const char* state_str(uint8_t state) {
         switch (state) {
 #define STATE(name, attrs) case STATE_##name: return PSTR(#name);
-#include "config.h"
+#include "generate.h"
         default: return 0;
         }
 }
@@ -251,11 +251,11 @@ INLINE uint8_t state_update() {
         }
 
 #define EVENT(name, condition) uint8_t name = (condition);
-#include "config.h"
+#include "generate.h"
 
 #define TRANSITION(initial, event, final, act, attrs) \
         if (state == STATE_##initial && (event)) { IF_EMPTY(act,, action_##act()); return STATE_##final; }
-#include "config.h"
+#include "generate.h"
 
         return state;
 }
