@@ -252,7 +252,8 @@ uint8_t state_update() {
                 flag.fehler_einkuppeln = 0;
         }
 
-        if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt) {
+        if (state != STATE_links_eingekuppelt && state != STATE_rechts_eingekuppelt &&
+            state != STATE_schlepp_links && state != STATE_schlepp_rechts) {
                 if (RISING_EDGE(schalter_auskuppeln))
                         flag.fehler_auskuppeln = 1;
                 else if (!in.schalter_auskuppeln)
