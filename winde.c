@@ -240,8 +240,7 @@ uint8_t state_update() {
         out.led_kappvorrichtung = in.kappvorrichtung_falsch;
         out.led_gangwarnung = in.gang_falsch;
         out.led_power = !in.motor_an;
-        out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
-        out.drehlampe = out.einkuppeln_links || out.einkuppeln_rechts;
+        out.drehlampe = out.einkuppeln_links | out.einkuppeln_rechts;
 
         if (state != STATE_bremse_getreten) {
                 if (RISING_EDGE(schalter_einkuppeln_links) || RISING_EDGE(schalter_einkuppeln_rechts))
@@ -262,7 +261,7 @@ uint8_t state_update() {
                 flag.fehler_auskuppeln = 0;
         }
 
-        uint8_t fehler_state = state == STATE_fehler_motor_an || state == STATE_fehler_motor_aus ? 1 : 0;
+        uint8_t fehler_state = state == STATE_fehler_motor_an || state == STATE_fehler_motor_aus;
         out.buzzer = flag.fehler_einkuppeln | flag.fehler_auskuppeln | fehler_state;
 
 #define EVENT(name, condition) uint8_t name = (condition);
