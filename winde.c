@@ -34,7 +34,9 @@ typedef struct {
 } cmd_t;
 
 typedef struct {
-        const char *name, *alias, *port;
+        const char *name, *alias;
+        char    port[1];
+        uint8_t bit;
 } port_t;
 
 INLINE int   bitfield_get(const uint8_t* bitfield, size_t i);
@@ -81,11 +83,9 @@ void         cmd_version(int argc, char* argv[]);
         DEF_PSTR(cmd_##name##_help, help)
 #define OUT(name, port, bit, alias) \
         DEF_PSTR(out_##name##_name, #name) \
-        DEF_PSTR(out_##name##_port, #port#bit) \
         IF_EMPTY(alias,, DEF_PSTR(out_##name##_alias, #alias))
 #define IN(name, port, bit, alias) \
         DEF_PSTR(in_##name##_name, #name) \
-        DEF_PSTR(in_##name##_port, #port#bit) \
         IF_EMPTY(alias,, DEF_PSTR(in_##name##_alias, #alias))
 #include "generate.h"
 
@@ -120,13 +120,13 @@ typedef union {
 
 const port_t PROGMEM in_list[] = {
 #define IN(name, port, bit, alias) \
-        { PSTR_in_##name##_name, IF_EMPTY(alias, 0, PSTR_in_##name##_alias), PSTR_in_##name##_port },
+        { PSTR_in_##name##_name, IF_EMPTY(alias, 0, PSTR_in_##name##_alias), #port, bit },
 #include "generate.h"
 };
 
 const port_t PROGMEM out_list[] = {
 #define OUT(name, port, bit, alias) \
-        { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), PSTR_out_##name##_port },
+        { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), #port, bit },
 #include "generate.h"
 };
 
@@ -262,7 +262,8 @@ uint8_t state_update() {
                 flag.fehler_auskuppeln = 0;
         }
 
-        out.buzzer = flag.fehler_einkuppeln | flag.fehler_auskuppeln;
+        uint8_t fehler_state = state == STATE_fehler_motor_an || state == STATE_fehler_motor_aus ? 1 : 0;
+        out.buzzer = flag.fehler_einkuppeln | flag.fehler_auskuppeln | fehler_state;
 
 #define EVENT(name, condition) uint8_t name = (condition);
 #include "generate.h"
@@ -345,14 +346,14 @@ void cmd_handler() {
 }
 
 void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
-        DEF_PSTR(FORMAT, "%-18S | %-28S | %-4S | %S\n")
-        DEF_PSTR(EMPTY,  "")
-        printf_P(PSTR_FORMAT, PSTR("Name"), PSTR("Alias"), PSTR("Port"), PSTR("Active"));
+        printf_P(PSTR("%-18S | %-28S | Port | Active\n"), PSTR("Name"), PSTR("Alias"));
         for (size_t i = 0; i < n; ++i) {
                 port_t port;
                 memcpy_P(&port, port_list + i, sizeof (port_t));
-                printf_P(PSTR_FORMAT, port.name, port.alias ? port.alias : PSTR_EMPTY,
-                         port.port, bitfield_get(bitfield, i) ? PSTR("X") : PSTR_EMPTY);
+                printf_P(PSTR("%-18S | %-28S |   %c%d | %c\n"),
+                         port.name, port.alias ? port.alias : PSTR(""),
+                         port.port[0], port.bit,
+                         bitfield_get(bitfield, i) ? 'X' : ' ');
         }
         putchar('\n');
 }
