@@ -34,9 +34,7 @@ typedef struct {
 } cmd_t;
 
 typedef struct {
-        const char *name, *alias;
-        char    port[1];
-        uint8_t bit;
+        const char *name, *alias, port[2];
 } port_t;
 
 INLINE int   bitfield_get(const uint8_t* bitfield, size_t i);
@@ -120,13 +118,13 @@ typedef union {
 
 const port_t PROGMEM in_list[] = {
 #define IN(name, port, bit, alias) \
-        { PSTR_in_##name##_name, IF_EMPTY(alias, 0, PSTR_in_##name##_alias), #port, bit },
+        { PSTR_in_##name##_name, IF_EMPTY(alias, 0, PSTR_in_##name##_alias), #port#bit },
 #include "generate.h"
 };
 
 const port_t PROGMEM out_list[] = {
 #define OUT(name, port, bit, alias) \
-        { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), #port, bit },
+        { PSTR_out_##name##_name, IF_EMPTY(alias, 0, PSTR_out_##name##_alias), #port#bit },
 #include "generate.h"
 };
 
@@ -349,9 +347,9 @@ void ports_print(const port_t* port_list, const uint8_t* bitfield, size_t n) {
         for (size_t i = 0; i < n; ++i) {
                 port_t port;
                 memcpy_P(&port, port_list + i, sizeof (port_t));
-                printf_P(PSTR("%-18S | %-28S |   %c%d | %c\n"),
+                printf_P(PSTR("%-18S | %-28S |   %c%c | %c\n"),
                          port.name, port.alias ? port.alias : PSTR(""),
-                         port.port[0], port.bit,
+                         port.port[0], port.port[1],
                          bitfield_get(bitfield, i) ? 'X' : ' ');
         }
         putchar('\n');
