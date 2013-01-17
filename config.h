@@ -37,9 +37,9 @@ IN (in3,                D,    5,   parkbremse_gezogen         )
 IN (in4,                D,    4,                              )
 IN (in5,                D,    3,   motor_temp_zu_hoch         )
 IN (in6,                D,    2,   wandler_temp_zu_hoch       )
-IN (in7,                D,    1,   kappvorrichtung_falsch     )
+IN (in7,                D,    1,                              )
 IN (in8,                D,    0,   motor_an                   )
-IN (in9,                B,    7,                              )
+IN (in9,                B,    7,   kappvorrichtung_falsch     )
 
 // Zustände des Automaten
 //    (Zustandsname,        Graphviz-Attribute )
